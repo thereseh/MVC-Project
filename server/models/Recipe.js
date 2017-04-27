@@ -70,11 +70,12 @@ RecipeSchema.statics.findAndRemove = (data, ownerId, callback) => {
   const search = {
     owner: ownerId,
     name: data.name,
-    ingredients: data.ingr,
+    ingredients: data.ingredients,
     notes: data.notes,
     category: data.category,
   };
 
+  console.dir(search);
   return RecipeModel.find(search).remove().exec(callback);
 };
 

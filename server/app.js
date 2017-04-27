@@ -9,11 +9,25 @@ const expressHandlebars = require('express-handlebars');
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 const url = require('url');
+const https = require('https');
 const csrf = require('csurf');
+const query = require('querystring');
+const yummlyHandler = require('./searchAPI.js');
+const yummly = require('yummly');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 const dbURL = process.env.MONGODB_URI || 'mongodb://localhost/RecipeMakerBaseYo';
+
+const onRequest = (request, response) => {
+  const parsedUrl = url.parse(request.url);
+      if (parsedUrl.pathname === '/search') {
+        yummlyHandler.searchYummly(request, response);
+      } else {
+        jsonHandler.notFoundMeta(request, response);
+      }
+  };
+
 
 mongoose.connect(dbURL, (err) => {
   if (err) {

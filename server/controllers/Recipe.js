@@ -14,13 +14,14 @@ const makerPage = (req, res) => {
 };
 
 const makeRecipe = (req, res) => {
-  if (!req.body.name || !req.body.ingr || !req.body.notes) {
+  if (!req.body.name) {
     return res.status(400).json({ error: 'Need to fill out fields!' });
   }
 
   const recipeData = {
     name: req.body.name,
     ingredients: req.body.ingr,
+    category: req.body.category,
     notes: req.body.notes,
     owner: req.session.account._id,
   };
@@ -57,6 +58,27 @@ const getRecipes = (request, response) => {
   });
 };
 
+const editRecipe = (request, response) => {
+  const req = request;
+  const res = response;
+  
+   const data = {
+    name: req.body.name,
+    ingredients: req.body.ingr,
+    notes: req.body.notes,
+  };
+
+  return Recipe.RecipeModel.findAndUpdate(data, req.session.account._id, (err, docs) => {
+    if (err) {
+      console.log(err);
+      return res.status(400).json({ error: 'An error occurred' });
+    }
+
+    return res.json({ recipes: docs });
+  });
+
+};
+
 const removeRecipe = (request, response) => {
   const req = request;
   const res = response;
@@ -64,8 +86,8 @@ const removeRecipe = (request, response) => {
     name: req.body.name,
     ingredients: req.body.ingr,
     notes: req.body.notes,
+    category: req.body.category,
   };
-
   return Recipe.RecipeModel.findAndRemove(data, req.session.account._id, (err, docs) => {
     if (err) {
       console.log(err);
