@@ -147,7 +147,9 @@ var renderRecipeList = function renderRecipeList() {
     );
   }
 
+  var recipeList = this;
   var recipeNodes = this.state.data.map(function (recipe) {
+    recipeList.state.childS[recipe._id] = { id: recipe._id, open: false };
     return React.createElement(
       "div",
       { key: recipe._id, className: "recipe" },
@@ -156,7 +158,7 @@ var renderRecipeList = function renderRecipeList() {
         null,
         React.createElement(
           Col,
-          { sm: 6, md: 3 },
+          { sm: 6, md: 4 },
           React.createElement(
             Well,
             null,
@@ -168,32 +170,52 @@ var renderRecipeList = function renderRecipeList() {
             ),
             React.createElement(
               Button,
-              { id: "showBtn", onClick: function onClick() {} },
+              { id: "showBtn", onClick: function onClick() {
+                  recipeList.toggleChildMenu(recipe._id);
+                } },
               React.createElement(Glyphicon, { glyph: "chevron-down" }),
               " "
             ),
             React.createElement(
-              Panel,
-              { collapsible: true, expanded: "false" },
+              Collapse,
+              { "in": recipeList.state.childS[recipe._id].open },
               React.createElement(
-                "h3",
-                { className: "textIngr" },
-                "Ingredients: ",
-                recipe.ingredients
-              ),
-              React.createElement(
-                "h3",
-                { className: "textNotes" },
-                "Notes: ",
-                recipe.notes
-              ),
-              React.createElement(
-                Button,
-                { onClick: function onClick() {
-                    removeRecipe(recipe.name, recipe.ingredients, recipe.notes, recipe.category);
-                  } },
-                React.createElement(Glyphicon, { glyph: "trash" }),
-                " "
+                "div",
+                { id: "recipeCont" },
+                React.createElement(
+                  "h3",
+                  { className: "textIngr" },
+                  "Ingredients:",
+                  React.createElement("br", null)
+                ),
+                React.createElement(
+                  "p",
+                  { className: "output" },
+                  recipe.ingredients
+                ),
+                React.createElement(
+                  "h3",
+                  { className: "textNotes" },
+                  "Notes:",
+                  React.createElement("br", null)
+                ),
+                React.createElement(
+                  "p",
+                  { className: "output" },
+                  recipe.notes
+                ),
+                React.createElement(
+                  Modal.Footer,
+                  { id: "listFooter" },
+                  React.createElement(
+                    Button,
+                    { onClick: function onClick() {
+                        removeRecipe(recipe.name, recipe.ingredients, recipe.notes, recipe.category);
+                      } },
+                    React.createElement(Glyphicon, { glyph: "trash" }),
+                    " "
+                  )
+                )
               )
             )
           )
@@ -235,7 +257,6 @@ var createModal = function createModal(csrf) {
     handleSubmit: function handleSubmit(e) {
       e.preventDefault();
       var length = this.state.value.length;
-      console.log(length);
       if (length === 0) {
         this.setState({ validation: 'error' });
         this.setState({ placeholder: 'Please, give me a name!' });
@@ -276,6 +297,7 @@ var setup = function setup(csrf) {
     getInitialState: function getInitialState() {
       return {
         data: [],
+        childS: {},
         open: false
       };
     },
@@ -284,11 +306,13 @@ var setup = function setup(csrf) {
         open: data
       });
     },
-    toggleChildMenu: function toggleChildMenu() {
-      console.log('toggle');
-      this.setState({
-        open: !this.state.open
-      });
+    changeTheState: function changeTheState(key) {
+      consle.log('log');
+    },
+    toggleChildMenu: function toggleChildMenu(key) {
+      console.dir(this.state.childS);
+      this.state.childS = !this.state.childS;
+      console.dir(this.state.childS);
     },
 
     componentDidMount: function componentDidMount() {

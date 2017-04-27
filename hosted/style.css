@@ -49,6 +49,7 @@ nav:nth-child(1) {
 }
 .textIngr, .textNotes {
   font-size: 1.2em;
+  white-space: pre-wrap;
 }
 
 #showBtn {
@@ -56,6 +57,13 @@ nav:nth-child(1) {
   display: inline-block;
 }
 
+#listFooter {
+  padding-bottom: 0;
+}
+
+#recipeCont {
+  height: auto;
+}
 .navlink a, .navlink a:link, .navlink a:visited, .navlink a:hover, .navlink a:active {
     color: white;
     text-decoration: none;

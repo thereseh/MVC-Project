@@ -102,22 +102,30 @@ const renderRecipeList = function () {
     );
   }
 
+  const recipeList = this;
   const recipeNodes = this.state.data.map(function (recipe) {
+    recipeList.state.childS[recipe._id] = {id: recipe._id, open: false};
     return (
       <div key={recipe._id} className = "recipe" ><div>
-      <Col sm={6}md={3}>
+      <Col sm={6}md={4}>
       <Well>
         <h3 className="textName" >{recipe.name} </h3>
-        <Button id="showBtn"onClick={ ()=> {}}><Glyphicon glyph="chevron-down"/> </Button>
-        <Panel collapsible expanded='false'>
-        <h3 className="textIngr">Ingredients: {recipe.ingredients}</h3> 
-        <h3 className="textNotes" >Notes: {recipe.notes}</h3>
-    
+        <Button id="showBtn"onClick={ ()=> {recipeList.toggleChildMenu(recipe._id)}}><Glyphicon glyph="chevron-down"/> </Button>
+        <Collapse in={recipeList.state.childS[recipe._id].open}>
+        <div id="recipeCont">
+        <h3 className="textIngr">Ingredients:
+          <br /></h3><p className="output">{recipe.ingredients}</p> 
+        <h3 className="textNotes" >Notes: 
+          <br /></h3><p className="output">{recipe.notes}</p>
+        <Modal.Footer id="listFooter">
         <Button onClick = {
           () => { 
             removeRecipe(recipe.name, recipe.ingredients, recipe.notes, recipe.category)
           }}><Glyphicon glyph = "trash"/> </Button>
-        </Panel>
+              </Modal.Footer>
+
+          </div>
+       </Collapse>
       </Well> 
       </Col> 
       </div> 
@@ -151,7 +159,6 @@ const createModal = function(csrf) {
     handleSubmit(e) {
       e.preventDefault();
       const length = this.state.value.length;
-      console.log(length);
       if (length === 0) {
         this.setState({ validation: 'error' });
         this.setState({ placeholder: 'Please, give me a name!' });
@@ -192,6 +199,7 @@ const setup = function (csrf) {
     getInitialState: function () {
       return {
         data: [],
+        childS: {},
         open: false,
       };
     },
@@ -200,11 +208,14 @@ const setup = function (csrf) {
         open: data
       });
     },
-     toggleChildMenu() {
-      console.log('toggle');
-      this.setState({
-        open: !this.state.open
-      });
+    changeTheState(key) {
+      consle.log('log')
+    },
+     toggleChildMenu(key) {
+       console.dir(this.state.childS);
+       this.state.childS = !this.state.childS;
+        console.dir(this.state.childS);
+
      },
     componentDidMount: function () {
       this.loadRecipesFromServer();
