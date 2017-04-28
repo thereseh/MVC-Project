@@ -40,6 +40,17 @@ nav:nth-child(1) {
     float: left;
 }
 
+#searchPanel {
+  width: 500px;
+  margin: 0 auto;
+  align-content: center;
+  margin-top: 30px;
+}
+
+#sBtn {
+  float: right;
+}
+
 
 .textName {
   font-size: 1.6em;

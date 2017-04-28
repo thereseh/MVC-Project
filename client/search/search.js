@@ -3,36 +3,84 @@ let SearchYummlyClass;
 let searchRenderer;
 let FieldGroup = ReactBootstrap.FieldGroup;
 
+  // to break up the different responses
+  const handleResponse = (xhr) => {
+     switch(xhr.status) {
+      case 200: //success
+         let search;
+         console.log(JSON.parse(xhr.response));
+        break;
+        default: //default other errors we are not handling in this example
+           break;
+     }
+};
+
+
 const handleSearch = (e) => {
-  sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {
+  console.log('post');
+
+   sendAjax('POST', $("#searchForm").attr("action"), $("#searchForm").serialize(), function () {
+    console.log('render');
   });
 
-  return false;
 };
 
 
 const renderSearch = function() {
-  console.log('hej');
  return (
    <div>
-   <FormGroup controlId="formControlsSearcg">
+     <Panel>
+     <form id="searchForm"
+        onSubmit={this.handleSubmit}
+        name="searchForm"
+        action="/search"
+        method="GET"
+        className="searchForm"
+      >
+   <FormGroup controlId="formControlsSearch" validationState={this.state.validation} id="formS">
       <ControlLabel>Name</ControlLabel>
-        <FormControl id="searchRec" componentClass="input" name="searchRec" placeholder="chicken.."/>
+        <FormControl id="searchRec" componentClass="input" name="searchRec" value={this.state.value} placeholder={this.state.placeholder} onChange={this.handleChange}/>
     </FormGroup>
      <input type="hidden" name="_csrf" value={this.props.csrf}/>
+      <Button id="sBtn" type="submit">
+              Submit
+            </Button>
+     </form>
+       </Panel>
      </div>
  );
 };
 
 const createSearchWindow = function(csrf) {
   const SearchWindow = React.createClass({
-    handleSubmit: handleSearch,
+     getInitialState() {
+    return { 
+      value: '',
+      validation: '',
+      placeholder: 'Chicken...'
+    };
+     },
+     handleSubmit(e) {
+      e.preventDefault();
+      const length = this.state.value.length;
+      if (length === 0) {
+        this.setState({ validation: 'error' });
+        this.setState({ placeholder: 'Please, give me a name!' });
+      }
+        else {
+         this.setState({ showModal: false });
+        handleSearch(e);
+      }
+    },
+        handleChange(e) {
+    this.setState({ value: e.target.value });
+    },
     render: renderSearch
   });
   
   searchRenderer = ReactDOM.render(
     <SearchWindow csrf={csrf}/>,
-    document.querySelector("#stuff")
+    document.querySelector("#searchPanel")
   );
 };
 

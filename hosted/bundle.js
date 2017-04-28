@@ -388,47 +388,101 @@ var sendAjax = function sendAjax(type, action, data, success) {
     }
   });
 };
-"use strict";
+'use strict';
 
 var YummlyListClass = void 0;
 var SearchYummlyClass = void 0;
 var searchRenderer = void 0;
 var FieldGroup = ReactBootstrap.FieldGroup;
 
-var handleSearch = function handleSearch(e) {
-  sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {});
+// to break up the different responses
+var handleResponse = function handleResponse(xhr) {
+  switch (xhr.status) {
+    case 200:
+      //success
+      var search = void 0;
+      console.log(JSON.parse(xhr.response));
+      break;
+    default:
+      //default other errors we are not handling in this example
+      break;
+  }
+};
 
-  return false;
+var handleSearch = function handleSearch(e) {
+  console.log('post');
+
+  sendAjax('POST', $("#searchForm").attr("action"), $("#searchForm").serialize(), function () {
+    console.log('render');
+  });
 };
 
 var renderSearch = function renderSearch() {
-  console.log('hej');
   return React.createElement(
-    "div",
+    'div',
     null,
     React.createElement(
-      FormGroup,
-      { controlId: "formControlsSearcg" },
+      Panel,
+      null,
       React.createElement(
-        ControlLabel,
-        null,
-        "Name"
-      ),
-      React.createElement(FormControl, { id: "searchRec", componentClass: "input", name: "searchRec", placeholder: "chicken.." })
-    ),
-    React.createElement("input", { type: "hidden", name: "_csrf", value: this.props.csrf })
+        'form',
+        { id: 'searchForm',
+          onSubmit: this.handleSubmit,
+          name: 'searchForm',
+          action: '/search',
+          method: 'GET',
+          className: 'searchForm'
+        },
+        React.createElement(
+          FormGroup,
+          { controlId: 'formControlsSearch', validationState: this.state.validation, id: 'formS' },
+          React.createElement(
+            ControlLabel,
+            null,
+            'Name'
+          ),
+          React.createElement(FormControl, { id: 'searchRec', componentClass: 'input', name: 'searchRec', value: this.state.value, placeholder: this.state.placeholder, onChange: this.handleChange })
+        ),
+        React.createElement('input', { type: 'hidden', name: '_csrf', value: this.props.csrf }),
+        React.createElement(
+          Button,
+          { id: 'sBtn', type: 'submit' },
+          'Submit'
+        )
+      )
+    )
   );
 };
 
 var createSearchWindow = function createSearchWindow(csrf) {
   var SearchWindow = React.createClass({
-    displayName: "SearchWindow",
+    displayName: 'SearchWindow',
+    getInitialState: function getInitialState() {
+      return {
+        value: '',
+        validation: '',
+        placeholder: 'Chicken...'
+      };
+    },
+    handleSubmit: function handleSubmit(e) {
+      e.preventDefault();
+      var length = this.state.value.length;
+      if (length === 0) {
+        this.setState({ validation: 'error' });
+        this.setState({ placeholder: 'Please, give me a name!' });
+      } else {
+        this.setState({ showModal: false });
+        handleSearch(e);
+      }
+    },
+    handleChange: function handleChange(e) {
+      this.setState({ value: e.target.value });
+    },
 
-    handleSubmit: handleSearch,
     render: renderSearch
   });
 
-  searchRenderer = ReactDOM.render(React.createElement(SearchWindow, { csrf: csrf }), document.querySelector("#stuff"));
+  searchRenderer = ReactDOM.render(React.createElement(SearchWindow, { csrf: csrf }), document.querySelector("#searchPanel"));
 };
 
 var setupSearch = function setupSearch(csrf) {

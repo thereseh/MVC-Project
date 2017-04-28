@@ -9,25 +9,13 @@ const expressHandlebars = require('express-handlebars');
 const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 const url = require('url');
-const https = require('https');
 const csrf = require('csurf');
-const query = require('querystring');
-const yummlyHandler = require('./searchAPI.js');
-const yummly = require('yummly');
+const querystring = require('querystring');
+
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 const dbURL = process.env.MONGODB_URI || 'mongodb://localhost/RecipeMakerBaseYo';
-
-const onRequest = (request, response) => {
-  const parsedUrl = url.parse(request.url);
-  if (parsedUrl.pathname === '/search') {
-    yummlyHandler.searchYummly(request, response);
-  } else {
-    jsonHandler.notFoundMeta(request, response);
-  }
-};
-
 
 mongoose.connect(dbURL, (err) => {
   if (err) {
@@ -49,6 +37,7 @@ if (process.env.REDISCLOUD_URL) {
 }
 
 const router = require('./router.js');
+const yummlyHandler = require('./searchAPI.js');
 
 const app = express();
 app.use('/assets', express.static(path.resolve(`${__dirname}/../hosted`)));
@@ -85,7 +74,33 @@ app.use((err, req, res, next) => {
   return false;
 });
 
+const handleParams = (req, response, parsedUrl) => {
+  console.log('handleParams reached');
+  // if the upload stream errors out, just throw a
+  // a bad request and send it back
+  const res = response;
+  response.on('error', (err) => {
+    console.log(err);
+    res.statusCode = 400;
+    res.end();
+  });
+  // on 'data' is for each byte of data that comes in
+  // from the upload. We will add it to our byte array.
+
+  // pass to our addUser function
+  if (parsedUrl.pathname === '/search') {
+    yummlyHandler.searchYummly(req, res);
+  }
+};
+
+app.post('/search', (req, res) => {
+  console.log('app.post reached');
+  const parsedUrl = url.parse(req.url);
+  handleParams(req, res, parsedUrl);
+});
+
 router(app);
+
 
 app.listen(port, (err) => {
   if (err) {
