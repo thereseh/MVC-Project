@@ -8,7 +8,7 @@
     "buildAppBundle": "babel ./client/app ./client/helper --presets react --out-file ./hosted/bundle.js",
     "build": "npm run buildLoginBundle && npm run buildAppBundle",
     "watchLoginBundle": "babel --watch ./client/login ./client/helper --presets react --out-file ./hosted/loginBundle.js",
-    "watchAppBundle": "babel --watch ./client/app ./client/helper --presets react --out-file ./hosted/bundle.js",
+    "watchAppBundle": "babel --watch ./client/app ./client/helper ./client/search --presets react --out-file ./hosted/bundle.js",
     "nodemon": "nodemon --watch ./server ./server/app.js",
     "start": "node ./server/app.js",
     "pretest": "eslint ./server --fix",
@@ -27,7 +27,8 @@
     "mongoose": "^4.4.6",
     "serve-favicon": "^2.3.0",
     "underscore": "^1.8.3",
-    "react-bootstrap": "0.30.9"
+    "react-bootstrap": "0.30.9",
+    "yummly": "0.2.4"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",

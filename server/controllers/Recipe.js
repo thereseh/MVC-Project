@@ -13,6 +13,10 @@ const makerPage = (req, res) => {
   });
 };
 
+const searchPage = (req, res) => {
+  res.render('yummly', { csrfToken: req.csrfToken() });
+};
+
 const makeRecipe = (req, res) => {
   if (!req.body.name) {
     return res.status(400).json({ error: 'Need to fill out fields!' });
@@ -61,8 +65,8 @@ const getRecipes = (request, response) => {
 const editRecipe = (request, response) => {
   const req = request;
   const res = response;
-  
-   const data = {
+
+  const data = {
     name: req.body.name,
     ingredients: req.body.ingr,
     notes: req.body.notes,
@@ -76,7 +80,6 @@ const editRecipe = (request, response) => {
 
     return res.json({ recipes: docs });
   });
-
 };
 
 const removeRecipe = (request, response) => {
@@ -98,6 +101,7 @@ const removeRecipe = (request, response) => {
   });
 };
 
+module.exports.searchPage = searchPage;
 module.exports.makerPage = makerPage;
 module.exports.getRecipes = getRecipes;
 module.exports.make = makeRecipe;

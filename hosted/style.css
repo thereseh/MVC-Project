@@ -57,6 +57,15 @@ nav:nth-child(1) {
   display: inline-block;
 }
 
+#searchBar {
+  height: 100%;
+  width: 100%;
+}
+
+#recipes {
+  margin: 10px 10px 10px 10px;
+}
+
 #listFooter {
   padding-bottom: 0;
 }

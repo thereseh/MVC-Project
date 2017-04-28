@@ -21,12 +21,12 @@ const dbURL = process.env.MONGODB_URI || 'mongodb://localhost/RecipeMakerBaseYo'
 
 const onRequest = (request, response) => {
   const parsedUrl = url.parse(request.url);
-      if (parsedUrl.pathname === '/search') {
-        yummlyHandler.searchYummly(request, response);
-      } else {
-        jsonHandler.notFoundMeta(request, response);
-      }
-  };
+  if (parsedUrl.pathname === '/search') {
+    yummlyHandler.searchYummly(request, response);
+  } else {
+    jsonHandler.notFoundMeta(request, response);
+  }
+};
 
 
 mongoose.connect(dbURL, (err) => {

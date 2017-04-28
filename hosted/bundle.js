@@ -32,6 +32,10 @@ var handleRecipe = function handleRecipe(e) {
   return false;
 };
 
+var openEdit = function openEdit() {
+  return $("#cs")[0].attributes.value.value;
+};
+
 /* Surely not a safe/good way to do this,
    but was what I could come up with */
 var removeRecipe = function removeRecipe(name, ingr, notes, cat) {
@@ -134,6 +138,84 @@ var renderModal = function renderModal() {
   );
 };
 
+var renderRecipe = function renderRecipe() {
+  var _this = this;
+
+  //use the inherited variables from Song Container parent element. This Song element will have a specific artist and songTitle passed in from the Song Container when it renders. 
+  var recipeList = this;
+  return React.createElement(
+    Col,
+    { sm: 6, md: 4 },
+    React.createElement(
+      Well,
+      null,
+      React.createElement(
+        "h3",
+        { className: "textName" },
+        this.props.name,
+        " "
+      ),
+      React.createElement(
+        Button,
+        { id: "showBtn", onClick: function onClick() {
+            recipeList.toggleChildMenu();
+          } },
+        React.createElement(Glyphicon, { glyph: "chevron-down" }),
+        " "
+      ),
+      React.createElement(
+        Collapse,
+        { "in": recipeList.state.open },
+        React.createElement(
+          "div",
+          { id: "recipeCont" },
+          React.createElement(
+            "h3",
+            { className: "textIngr" },
+            "Ingredients:",
+            React.createElement("br", null)
+          ),
+          React.createElement(
+            "p",
+            { className: "output" },
+            this.props.ingredients
+          ),
+          React.createElement(
+            "h3",
+            { className: "textNotes" },
+            "Notes:",
+            React.createElement("br", null)
+          ),
+          React.createElement(
+            "p",
+            { className: "output" },
+            this.props.notes
+          ),
+          React.createElement(
+            Modal.Footer,
+            { id: "listFooter" },
+            React.createElement(
+              Button,
+              { onClick: function onClick() {
+                  createModal(openEdit());
+                } },
+              "Edit"
+            ),
+            React.createElement(
+              Button,
+              { onClick: function onClick() {
+                  removeRecipe(_this.props.name, _this.props.ingredients, _this.props.notes, _this.props.category);
+                } },
+              React.createElement(Glyphicon, { glyph: "trash" }),
+              " "
+            )
+          )
+        )
+      )
+    )
+  );
+};
+
 var renderRecipeList = function renderRecipeList() {
   if (this.state.data.length === 0) {
     return React.createElement(
@@ -149,78 +231,10 @@ var renderRecipeList = function renderRecipeList() {
 
   var recipeList = this;
   var recipeNodes = this.state.data.map(function (recipe) {
-    recipeList.state.childS[recipe._id] = { id: recipe._id, open: false };
     return React.createElement(
       "div",
       { key: recipe._id, className: "recipe" },
-      React.createElement(
-        "div",
-        null,
-        React.createElement(
-          Col,
-          { sm: 6, md: 4 },
-          React.createElement(
-            Well,
-            null,
-            React.createElement(
-              "h3",
-              { className: "textName" },
-              recipe.name,
-              " "
-            ),
-            React.createElement(
-              Button,
-              { id: "showBtn", onClick: function onClick() {
-                  recipeList.toggleChildMenu(recipe._id);
-                } },
-              React.createElement(Glyphicon, { glyph: "chevron-down" }),
-              " "
-            ),
-            React.createElement(
-              Collapse,
-              { "in": recipeList.state.childS[recipe._id].open },
-              React.createElement(
-                "div",
-                { id: "recipeCont" },
-                React.createElement(
-                  "h3",
-                  { className: "textIngr" },
-                  "Ingredients:",
-                  React.createElement("br", null)
-                ),
-                React.createElement(
-                  "p",
-                  { className: "output" },
-                  recipe.ingredients
-                ),
-                React.createElement(
-                  "h3",
-                  { className: "textNotes" },
-                  "Notes:",
-                  React.createElement("br", null)
-                ),
-                React.createElement(
-                  "p",
-                  { className: "output" },
-                  recipe.notes
-                ),
-                React.createElement(
-                  Modal.Footer,
-                  { id: "listFooter" },
-                  React.createElement(
-                    Button,
-                    { onClick: function onClick() {
-                        removeRecipe(recipe.name, recipe.ingredients, recipe.notes, recipe.category);
-                      } },
-                    React.createElement(Glyphicon, { glyph: "trash" }),
-                    " "
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
+      React.createElement(Recipe, { name: recipe.name, category: recipe.category, ingredients: recipe.ingredients, notes: recipe.notes, onClick: recipeList.toggleChildMenu })
     );
   });
 
@@ -276,6 +290,38 @@ var createModal = function createModal(csrf) {
   });
   modalRenderer = ReactDOM.render(React.createElement(AddNewRecipeClass, { csrf: csrf }), document.querySelector("#content"));
 };
+
+var defaultRecipeProps = function defaultRecipeProps() {
+  return {
+    open: false,
+    name: '',
+    category: '',
+    ingredients: '',
+    notes: ''
+  };
+};
+
+var Recipe = React.createClass({
+  displayName: "Recipe",
+
+  getDefaultProps: defaultRecipeProps,
+  render: renderRecipe,
+  propTypes: {
+    name: React.PropTypes.string.isRequired,
+    category: React.PropTypes.string.isRequired,
+    ingredients: React.PropTypes.string.isRequired,
+    notes: React.PropTypes.string.isRequired
+  },
+  getInitialState: function getInitialState() {
+    return {
+      open: false
+    };
+  },
+  toggleChildMenu: function toggleChildMenu() {
+    this.setState({ open: !this.state.open });
+  }
+});
+
 var setup = function setup(csrf) {
   var addRecipeButton = document.querySelector("#addRecipe");
   addRecipeButton.addEventListener("click", function (e) {
@@ -297,24 +343,9 @@ var setup = function setup(csrf) {
     getInitialState: function getInitialState() {
       return {
         data: [],
-        childS: {},
         open: false
       };
     },
-    handleToggle: function handleToggle(data) {
-      this.setState({
-        open: data
-      });
-    },
-    changeTheState: function changeTheState(key) {
-      consle.log('log');
-    },
-    toggleChildMenu: function toggleChildMenu(key) {
-      console.dir(this.state.childS);
-      this.state.childS = !this.state.childS;
-      console.dir(this.state.childS);
-    },
-
     componentDidMount: function componentDidMount() {
       this.loadRecipesFromServer();
     },
@@ -357,3 +388,60 @@ var sendAjax = function sendAjax(type, action, data, success) {
     }
   });
 };
+"use strict";
+
+var YummlyListClass = void 0;
+var SearchYummlyClass = void 0;
+var searchRenderer = void 0;
+var FieldGroup = ReactBootstrap.FieldGroup;
+
+var handleSearch = function handleSearch(e) {
+  sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {});
+
+  return false;
+};
+
+var renderSearch = function renderSearch() {
+  console.log('hej');
+  return React.createElement(
+    "div",
+    null,
+    React.createElement(
+      FormGroup,
+      { controlId: "formControlsSearcg" },
+      React.createElement(
+        ControlLabel,
+        null,
+        "Name"
+      ),
+      React.createElement(FormControl, { id: "searchRec", componentClass: "input", name: "searchRec", placeholder: "chicken.." })
+    ),
+    React.createElement("input", { type: "hidden", name: "_csrf", value: this.props.csrf })
+  );
+};
+
+var createSearchWindow = function createSearchWindow(csrf) {
+  var SearchWindow = React.createClass({
+    displayName: "SearchWindow",
+
+    handleSubmit: handleSearch,
+    render: renderSearch
+  });
+
+  searchRenderer = ReactDOM.render(React.createElement(SearchWindow, { csrf: csrf }), document.querySelector("#stuff"));
+};
+
+var setupSearch = function setupSearch(csrf) {
+  console.log('setup');
+  createSearchWindow(csrf);
+};
+
+var getToken = function getToken() {
+  sendAjax('GET', '/getToken', null, function (result) {
+    setupSearch(result.csrfToken);
+  });
+};
+
+$(document).ready(function () {
+  getToken();
+});

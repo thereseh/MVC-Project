@@ -1,7 +1,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
-  <title>Recipes</title>
+  <title>Search</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.30.9/react-bootstrap.min.js"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
   <link rel="shortcut icon" href="/assets/img/favicon.png"/>
@@ -9,16 +9,13 @@
 </head>
 <body>
   <nav><a href="/login"></a>
-    <div class="navlink"><a href="/logout">Log out</a><a href="yummly">Search Recipes</a><a href="/maker" id="addRecipe">Add Recipe</a></div>
+    <div class="navlink"><a href="/logout">Log out</a><a href="/maker" style="display: none" id="addRecipe"></a><a href="/maker">Recipe Book</a></div>
   </nav>
-  <div id="content"></div>
-  <section id="makeRecipe">
+  <section id="stuff">
   </section>
-  <section id="recipes">
+  <section id="searchResults">
   </section>
-  <div id="recipeMessage">
-    <h3><span id="errorMessage"></span></h3>
-  </div>
-  <script src="/assets/bundle.js"></script>
 </body>
+    <script src="/assets/bundle.js"></script>
+
 </html>

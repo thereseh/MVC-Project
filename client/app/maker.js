@@ -16,6 +16,7 @@ let ControlLabel = ReactBootstrap.ControlLabel;
 let FormControl = ReactBootstrap.FormControl;
 let Panel = ReactBootstrap.Panel;
 
+
 let Modal = ReactBootstrap.Modal;
 
 
@@ -27,6 +28,10 @@ const handleRecipe = (e) => {
   });
 
   return false;
+};
+
+const openEdit = () => {
+  return $("#cs")[0].attributes.value.value;
 };
 
 /* Surely not a safe/good way to do this,
@@ -48,7 +53,7 @@ const removeRecipe = (name, ingr, notes, cat) => {
 const renderModal = function () {
   return (
     <div>
-          <Modal show={this.state.showModal} onHide={this.close}>
+        <Modal show={this.state.showModal} onHide={this.close}>
         <form id="modalRenderer"
         onSubmit={this.handleSubmit}
         name="modalRenderer"
@@ -93,6 +98,39 @@ const renderModal = function () {
   );
 };
 
+const renderRecipe = function() {
+  //use the inherited variables from Song Container parent element. This Song element will have a specific artist and songTitle passed in from the Song Container when it renders. 
+    const recipeList = this;
+  return (
+      <Col sm={6}md={4}>
+      <Well>
+        <h3 className="textName" >{this.props.name} </h3>
+        <Button id="showBtn"onClick={ ()=> {recipeList.toggleChildMenu()}}><Glyphicon glyph="chevron-down"/> </Button>
+        <Collapse in={recipeList.state.open}>
+        <div id="recipeCont">
+        <h3 className="textIngr">Ingredients:
+          <br /></h3><p className="output">{this.props.ingredients}</p> 
+        <h3 className="textNotes" >Notes: 
+          <br /></h3><p className="output">{this.props.notes}</p>
+        <Modal.Footer id="listFooter">
+          <Button onClick = {
+          () => { 
+            createModal(openEdit());
+          }}>Edit</Button>
+        <Button onClick = {
+          () => { 
+            removeRecipe(this.props.name, this.props.ingredients, this.props.notes, this.props.category)
+          }}><Glyphicon glyph = "trash"/> </Button>
+              </Modal.Footer>
+          </div>
+       </Collapse>
+      </Well> 
+      </Col> 
+  )
+};
+
+
+
 const renderRecipeList = function () {
   if (this.state.data.length === 0) {
     return ( 
@@ -104,31 +142,9 @@ const renderRecipeList = function () {
 
   const recipeList = this;
   const recipeNodes = this.state.data.map(function (recipe) {
-    recipeList.state.childS[recipe._id] = {id: recipe._id, open: false};
     return (
-      <div key={recipe._id} className = "recipe" ><div>
-      <Col sm={6}md={4}>
-      <Well>
-        <h3 className="textName" >{recipe.name} </h3>
-        <Button id="showBtn"onClick={ ()=> {recipeList.toggleChildMenu(recipe._id)}}><Glyphicon glyph="chevron-down"/> </Button>
-        <Collapse in={recipeList.state.childS[recipe._id].open}>
-        <div id="recipeCont">
-        <h3 className="textIngr">Ingredients:
-          <br /></h3><p className="output">{recipe.ingredients}</p> 
-        <h3 className="textNotes" >Notes: 
-          <br /></h3><p className="output">{recipe.notes}</p>
-        <Modal.Footer id="listFooter">
-        <Button onClick = {
-          () => { 
-            removeRecipe(recipe.name, recipe.ingredients, recipe.notes, recipe.category)
-          }}><Glyphicon glyph = "trash"/> </Button>
-              </Modal.Footer>
-
-          </div>
-       </Collapse>
-      </Well> 
-      </Col> 
-      </div> 
+      <div key={recipe._id} className="recipe" >
+      <Recipe name={recipe.name} category={recipe.category} ingredients={recipe.ingredients} notes={recipe.notes} onClick={recipeList.toggleChildMenu}/>
       </div>
     );
   });
@@ -180,6 +196,38 @@ const createModal = function(csrf) {
     <AddNewRecipeClass csrf = {csrf}/>, document.querySelector("#content")
   );
 };
+
+const defaultRecipeProps = () => {
+  return {
+    open: false,
+    name: '',
+    category: '',
+    ingredients: '',
+    notes: '',
+  }
+};
+
+
+const Recipe = React.createClass({
+  getDefaultProps: defaultRecipeProps,
+  render: renderRecipe,
+  propTypes: {
+    name: React.PropTypes.string.isRequired,
+    category: React.PropTypes.string.isRequired,
+    ingredients: React.PropTypes.string.isRequired,
+    notes: React.PropTypes.string.isRequired,
+  },
+  getInitialState: function () {
+      return {
+        open: false,
+      };
+    },
+   toggleChildMenu() {
+      this.setState({open: !this.state.open});
+    },
+});
+
+
 const setup = function (csrf) {
    const addRecipeButton = document.querySelector("#addRecipe");
       addRecipeButton.addEventListener("click", (e) => {
@@ -199,24 +247,9 @@ const setup = function (csrf) {
     getInitialState: function () {
       return {
         data: [],
-        childS: {},
         open: false,
       };
     },
-    handleToggle: function (data) {
-      this.setState({
-        open: data
-      });
-    },
-    changeTheState(key) {
-      consle.log('log')
-    },
-     toggleChildMenu(key) {
-       console.dir(this.state.childS);
-       this.state.childS = !this.state.childS;
-        console.dir(this.state.childS);
-
-     },
     componentDidMount: function () {
       this.loadRecipesFromServer();
     },

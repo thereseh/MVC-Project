@@ -10,6 +10,7 @@ const router = (app) => {
   app.post('/signup', mid.requiresSecure, mid.requiresLogout, controllers.Account.signup);
   app.get('/logout', mid.requiresLogin, controllers.Account.logout);
   app.get('/maker', mid.requiresLogin, controllers.Recipe.makerPage);
+  app.get('/yummly', mid.requiresLogin, controllers.Recipe.searchPage);
   app.post('/maker', mid.requiresLogin, controllers.Recipe.make);
   app.delete('/removeRecipe', mid.requiresLogin, controllers.Recipe.removeRecipe);
   app.get('/', mid.requiresSecure, mid.requiresLogout, controllers.Account.loginPage);
