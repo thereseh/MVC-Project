@@ -62,23 +62,17 @@ const getRecipes = (request, response) => {
   });
 };
 
-const editRecipe = (request, response) => {
+const getCategories = (request, response) => {
   const req = request;
   const res = response;
 
-  const data = {
-    name: req.body.name,
-    ingredients: req.body.ingr,
-    notes: req.body.notes,
-  };
-
-  return Recipe.RecipeModel.findAndUpdate(data, req.session.account._id, (err, docs) => {
+  return Recipe.RecipeModel.findCategoriesByOwner(req.session.account._id, (err, docs) => {
     if (err) {
       console.log(err);
       return res.status(400).json({ error: 'An error occurred' });
     }
 
-    return res.json({ recipes: docs });
+    return res.json({ categories: docs });
   });
 };
 
@@ -106,4 +100,5 @@ module.exports.makerPage = makerPage;
 module.exports.getRecipes = getRecipes;
 module.exports.make = makeRecipe;
 module.exports.removeRecipe = removeRecipe;
+module.exports.getCategories = getCategories;
 

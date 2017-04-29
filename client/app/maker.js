@@ -15,23 +15,18 @@ let FormGroup = ReactBootstrap.FormGroup;
 let ControlLabel = ReactBootstrap.ControlLabel;
 let FormControl = ReactBootstrap.FormControl;
 let Panel = ReactBootstrap.Panel;
-
-
 let Modal = ReactBootstrap.Modal;
+let SplitButton = ReactBootstrap.SplitButton;
+let MenuItem = ReactBootstrap.MenuItem;
+let DropdownButton = ReactBootstrap.DropdownButton;
 
 
 const handleRecipe = (e) => {
-  console.log($("#modalRenderer").serialize());
-  sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {
-    console.log('render');
-    recipeRenderer.loadRecipesFromServer();
+  sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {    recipeRenderer.loadRecipesFromServer();
+  modalRenderer.loadCategoriesFromServer();
   });
 
   return false;
-};
-
-const openEdit = () => {
-  return $("#cs")[0].attributes.value.value;
 };
 
 /* Surely not a safe/good way to do this,
@@ -51,6 +46,13 @@ const removeRecipe = (name, ingr, notes, cat) => {
 
 
 const renderModal = function () {
+   const recipeList = this;
+   const cateNodes = this.state.data.map(function (category) {
+    return (
+      <MenuItem key={category._id} eventKey={category._id} value={category.category} onClick={ ()=> {recipeList.toggleChildMenu(category.category)}}>{category.category}</MenuItem>
+    );
+  });
+  
   return (
     <div>
         <Modal show={this.state.showModal} onHide={this.close}>
@@ -65,6 +67,9 @@ const renderModal = function () {
           <Modal.Title>Add Recipe</Modal.Title>
           </Modal.Header>
           <Modal.Body>
+          <DropdownButton bsStyle="default" title="Categories" id="catDropDown">
+          {cateNodes}
+          </DropdownButton>
            <FormGroup controlId="formControlsName" id="formName"  validationState={this.state.validation}>
             <ControlLabel>Name</ControlLabel>
             <FormControl id="recipeName" componentClass="input" name="name" value={this.state.value} placeholder={this.state.placeholder} onChange={this.handleChange}/>
@@ -73,7 +78,10 @@ const renderModal = function () {
             
             <FormGroup controlId="formControlsCategory">
             <ControlLabel>Category</ControlLabel>
-            <FormControl id="categoryName" componentClass="input" name="category" placeholder="Category..."/>
+            <FormControl id="categoryName" componentClass="input" name="category"
+            value={this.state.cat}
+            onChange={this.handleCatChange}
+            placeholder="Category..."/>
             </FormGroup>
             
             <FormGroup controlId="formControlsIngredients">
@@ -113,10 +121,6 @@ const renderRecipe = function() {
         <h3 className="textNotes" >Notes: 
           <br /></h3><p className="output">{this.props.notes}</p>
         <Modal.Footer id="listFooter">
-          <Button onClick = {
-          () => { 
-            createModal(openEdit());
-          }}>Edit</Button>
         <Button onClick = {
           () => { 
             removeRecipe(this.props.name, this.props.ingredients, this.props.notes, this.props.category)
@@ -144,7 +148,7 @@ const renderRecipeList = function () {
   const recipeNodes = this.state.data.map(function (recipe) {
     return (
       <div key={recipe._id} className="recipe" >
-      <Recipe name={recipe.name} category={recipe.category} ingredients={recipe.ingredients} notes={recipe.notes} onClick={recipeList.toggleChildMenu}/>
+      <Recipe name={recipe.name} category={recipe.category} ingredients={recipe.ingredients} notes={recipe.notes}/>
       </div>
     );
   });
@@ -169,9 +173,18 @@ const createModal = function(csrf) {
       showModal: true,
       value: '',
       validation: '',
-      placeholder: 'Name of recipe...'
+      placeholder: 'Name of recipe...',
+      data: [],
+      cat: '',
     };
   },
+    loadCategoriesFromServer: function () {
+      sendAjax('GET', '/getCategories', null, function (data) {
+        this.setState({
+          data: data.categories,
+        });
+      }.bind(this));
+    },
     handleSubmit(e) {
       e.preventDefault();
       const length = this.state.value.length;
@@ -187,9 +200,18 @@ const createModal = function(csrf) {
      handleChange(e) {
     this.setState({ value: e.target.value });
   },
+    handleCatChange(e) {
+    this.setState({ cat: e.target.value });
+  },
     close() {
     this.setState({ showModal: false });
   },
+    toggleChildMenu(value) {
+      this.setState({cat: value});
+    },
+    componentDidMount: function () {
+      this.loadCategoriesFromServer();
+    },
     render: renderModal
   });
   modalRenderer = ReactDOM.render(

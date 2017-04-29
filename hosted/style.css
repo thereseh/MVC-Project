@@ -40,6 +40,13 @@ nav:nth-child(1) {
     float: left;
 }
 
+#loginPanel {
+   width: 500px;
+  margin: 0 auto;
+  align-content: center;
+  margin-top: 30px;
+}
+
 #searchPanel {
   width: 500px;
   margin: 0 auto;
@@ -80,10 +87,29 @@ nav:nth-child(1) {
 #listFooter {
   padding-bottom: 0;
 }
+#contentLogin {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  align-content: center;
+  margin-top: 30px;
+}
+#errorMessage {
+  text-align: center;
+  margin: 0 auto;
+  align-content: center;
+  margin-top: 30px;
+  display:none;
 
+}
 #recipeCont {
   height: auto;
 }
+
+#errMsg {
+  text-align: center;
+}
+
 .navlink a, .navlink a:link, .navlink a:visited, .navlink a:hover, .navlink a:active {
     color: white;
     text-decoration: none;

@@ -19,21 +19,18 @@ var FormGroup = ReactBootstrap.FormGroup;
 var ControlLabel = ReactBootstrap.ControlLabel;
 var FormControl = ReactBootstrap.FormControl;
 var Panel = ReactBootstrap.Panel;
-
 var Modal = ReactBootstrap.Modal;
+var SplitButton = ReactBootstrap.SplitButton;
+var MenuItem = ReactBootstrap.MenuItem;
+var DropdownButton = ReactBootstrap.DropdownButton;
 
 var handleRecipe = function handleRecipe(e) {
-  console.log($("#modalRenderer").serialize());
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {
-    console.log('render');
     recipeRenderer.loadRecipesFromServer();
+    modalRenderer.loadCategoriesFromServer();
   });
 
   return false;
-};
-
-var openEdit = function openEdit() {
-  return $("#cs")[0].attributes.value.value;
 };
 
 /* Surely not a safe/good way to do this,
@@ -53,6 +50,17 @@ var removeRecipe = function removeRecipe(name, ingr, notes, cat) {
 
 var renderModal = function renderModal() {
   var _React$createElement, _React$createElement2;
+
+  var recipeList = this;
+  var cateNodes = this.state.data.map(function (category) {
+    return React.createElement(
+      MenuItem,
+      { key: category._id, eventKey: category._id, value: category.category, onClick: function onClick() {
+          recipeList.toggleChildMenu(category.category);
+        } },
+      category.category
+    );
+  });
 
   return React.createElement(
     "div",
@@ -82,6 +90,11 @@ var renderModal = function renderModal() {
           Modal.Body,
           null,
           React.createElement(
+            DropdownButton,
+            { bsStyle: "default", title: "Categories", id: "catDropDown" },
+            cateNodes
+          ),
+          React.createElement(
             FormGroup,
             { controlId: "formControlsName", id: "formName", validationState: this.state.validation },
             React.createElement(
@@ -100,7 +113,10 @@ var renderModal = function renderModal() {
               null,
               "Category"
             ),
-            React.createElement(FormControl, { id: "categoryName", componentClass: "input", name: "category", placeholder: "Category..." })
+            React.createElement(FormControl, { id: "categoryName", componentClass: "input", name: "category",
+              value: this.state.cat,
+              onChange: this.handleCatChange,
+              placeholder: "Category..." })
           ),
           React.createElement(
             FormGroup,
@@ -197,13 +213,6 @@ var renderRecipe = function renderRecipe() {
             React.createElement(
               Button,
               { onClick: function onClick() {
-                  createModal(openEdit());
-                } },
-              "Edit"
-            ),
-            React.createElement(
-              Button,
-              { onClick: function onClick() {
                   removeRecipe(_this.props.name, _this.props.ingredients, _this.props.notes, _this.props.category);
                 } },
               React.createElement(Glyphicon, { glyph: "trash" }),
@@ -234,7 +243,7 @@ var renderRecipeList = function renderRecipeList() {
     return React.createElement(
       "div",
       { key: recipe._id, className: "recipe" },
-      React.createElement(Recipe, { name: recipe.name, category: recipe.category, ingredients: recipe.ingredients, notes: recipe.notes, onClick: recipeList.toggleChildMenu })
+      React.createElement(Recipe, { name: recipe.name, category: recipe.category, ingredients: recipe.ingredients, notes: recipe.notes })
     );
   });
 
@@ -265,8 +274,18 @@ var createModal = function createModal(csrf) {
         showModal: true,
         value: '',
         validation: '',
-        placeholder: 'Name of recipe...'
+        placeholder: 'Name of recipe...',
+        data: [],
+        cat: ''
       };
+    },
+
+    loadCategoriesFromServer: function loadCategoriesFromServer() {
+      sendAjax('GET', '/getCategories', null, function (data) {
+        this.setState({
+          data: data.categories
+        });
+      }.bind(this));
     },
     handleSubmit: function handleSubmit(e) {
       e.preventDefault();
@@ -282,10 +301,19 @@ var createModal = function createModal(csrf) {
     handleChange: function handleChange(e) {
       this.setState({ value: e.target.value });
     },
+    handleCatChange: function handleCatChange(e) {
+      this.setState({ cat: e.target.value });
+    },
     close: function close() {
       this.setState({ showModal: false });
     },
+    toggleChildMenu: function toggleChildMenu(value) {
+      this.setState({ cat: value });
+    },
 
+    componentDidMount: function componentDidMount() {
+      this.loadCategoriesFromServer();
+    },
     render: renderModal
   });
   modalRenderer = ReactDOM.render(React.createElement(AddNewRecipeClass, { csrf: csrf }), document.querySelector("#content"));
@@ -368,9 +396,11 @@ $(document).ready(function () {
 
 var handleError = function handleError(message) {
   $("#errorMessage").text(message);
+  $("#errorMessage").animate({ width: 'toggle' }, 350);
 };
 
 var redirect = function redirect(response) {
+  $("#errorMessage").animate({ width: 'hide' }, 350);
   window.location = response.redirect;
 };
 
@@ -388,114 +418,3 @@ var sendAjax = function sendAjax(type, action, data, success) {
     }
   });
 };
-'use strict';
-
-var YummlyListClass = void 0;
-var SearchYummlyClass = void 0;
-var searchRenderer = void 0;
-var FieldGroup = ReactBootstrap.FieldGroup;
-
-// to break up the different responses
-var handleResponse = function handleResponse(xhr) {
-  switch (xhr.status) {
-    case 200:
-      //success
-      var search = void 0;
-      console.log(JSON.parse(xhr.response));
-      break;
-    default:
-      //default other errors we are not handling in this example
-      break;
-  }
-};
-
-var handleSearch = function handleSearch(e) {
-  console.log('post');
-
-  sendAjax('POST', $("#searchForm").attr("action"), $("#searchForm").serialize(), function () {
-    console.log('render');
-  });
-};
-
-var renderSearch = function renderSearch() {
-  return React.createElement(
-    'div',
-    null,
-    React.createElement(
-      Panel,
-      null,
-      React.createElement(
-        'form',
-        { id: 'searchForm',
-          onSubmit: this.handleSubmit,
-          name: 'searchForm',
-          action: '/search',
-          method: 'GET',
-          className: 'searchForm'
-        },
-        React.createElement(
-          FormGroup,
-          { controlId: 'formControlsSearch', validationState: this.state.validation, id: 'formS' },
-          React.createElement(
-            ControlLabel,
-            null,
-            'Name'
-          ),
-          React.createElement(FormControl, { id: 'searchRec', componentClass: 'input', name: 'searchRec', value: this.state.value, placeholder: this.state.placeholder, onChange: this.handleChange })
-        ),
-        React.createElement('input', { type: 'hidden', name: '_csrf', value: this.props.csrf }),
-        React.createElement(
-          Button,
-          { id: 'sBtn', type: 'submit' },
-          'Submit'
-        )
-      )
-    )
-  );
-};
-
-var createSearchWindow = function createSearchWindow(csrf) {
-  var SearchWindow = React.createClass({
-    displayName: 'SearchWindow',
-    getInitialState: function getInitialState() {
-      return {
-        value: '',
-        validation: '',
-        placeholder: 'Chicken...'
-      };
-    },
-    handleSubmit: function handleSubmit(e) {
-      e.preventDefault();
-      var length = this.state.value.length;
-      if (length === 0) {
-        this.setState({ validation: 'error' });
-        this.setState({ placeholder: 'Please, give me a name!' });
-      } else {
-        this.setState({ showModal: false });
-        handleSearch(e);
-      }
-    },
-    handleChange: function handleChange(e) {
-      this.setState({ value: e.target.value });
-    },
-
-    render: renderSearch
-  });
-
-  searchRenderer = ReactDOM.render(React.createElement(SearchWindow, { csrf: csrf }), document.querySelector("#searchPanel"));
-};
-
-var setupSearch = function setupSearch(csrf) {
-  console.log('setup');
-  createSearchWindow(csrf);
-};
-
-var getToken = function getToken() {
-  sendAjax('GET', '/getToken', null, function (result) {
-    setupSearch(result.csrfToken);
-  });
-};
-
-$(document).ready(function () {
-  getToken();
-});

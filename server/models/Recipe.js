@@ -65,6 +65,14 @@ RecipeSchema.statics.findByOwner = (ownerId, callback) => {
   return RecipeModel.find(search).select('name ingredients notes category').exec(callback);
 };
 
+RecipeSchema.statics.findCategoriesByOwner = (ownerId, callback) => {
+  const search = {
+    owner: convertId(ownerId),
+  };
+
+  return RecipeModel.find(search).select('category').exec(callback);
+};
+
 // finds a specific domo and removes it
 RecipeSchema.statics.findAndRemove = (data, ownerId, callback) => {
   const search = {

@@ -10,7 +10,7 @@ const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 const url = require('url');
 const csrf = require('csurf');
-const querystring = require('querystring');
+const http = require('http');
 
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
@@ -74,6 +74,7 @@ app.use((err, req, res, next) => {
   return false;
 });
 
+
 const handleParams = (req, response, parsedUrl) => {
   console.log('handleParams reached');
   // if the upload stream errors out, just throw a
@@ -102,7 +103,7 @@ app.post('/search', (req, res) => {
 router(app);
 
 
-app.listen(port, (err) => {
+http.createServer(app).listen(port, (err) => {
   if (err) {
     throw err;
   }
