@@ -5,18 +5,19 @@ let searchListRenderer;
 let FieldGroup = ReactBootstrap.FieldGroup;
 let yum = {};
 
-  // to break up the different responses
-  const handleResponse = (xhr) => {
-     switch(xhr.status) {
-      case 200: //success
-         console.log(JSON.parse(xhr.response));
-        yum = JSON.parse(xhr.response).matches;
-        break;
-        default: //default other errors we are not handling in this example
-        break;
-     }
+// retrieves the json data
+const handleResponse = (xhr) => {
+    switch(xhr.status) {
+     case 200: //success
+        console.log(JSON.parse(xhr.response));
+       yum = JSON.parse(xhr.response).matches;
+       break;
+       default: //default other errors we are not handling in this example
+       break;
+    }
 };
 
+// calls the server to do a search
 const handleSearch = (e) => {
   console.log('post');
   const xhr = new XMLHttpRequest();

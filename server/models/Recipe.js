@@ -65,6 +65,7 @@ RecipeSchema.statics.findByOwner = (ownerId, callback) => {
   return RecipeModel.find(search).select('name ingredients notes category').exec(callback);
 };
 
+// by owner, check all recipes and send back the categories
 RecipeSchema.statics.findCategoriesByOwner = (ownerId, callback) => {
   const search = {
     owner: convertId(ownerId),
@@ -83,7 +84,6 @@ RecipeSchema.statics.findAndRemove = (data, ownerId, callback) => {
     category: data.category,
   };
 
-  console.dir(search);
   return RecipeModel.find(search).remove().exec(callback);
 };
 

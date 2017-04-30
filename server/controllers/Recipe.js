@@ -48,6 +48,7 @@ const makeRecipe = (req, res) => {
   return recipePromise;
 };
 
+// gets all recipes from database
 const getRecipes = (request, response) => {
   const req = request;
   const res = response;
@@ -62,6 +63,7 @@ const getRecipes = (request, response) => {
   });
 };
 
+// get all categories from database
 const getCategories = (request, response) => {
   const req = request;
   const res = response;
@@ -76,6 +78,7 @@ const getCategories = (request, response) => {
   });
 };
 
+// removes a recipe from the database
 const removeRecipe = (request, response) => {
   const req = request;
   const res = response;

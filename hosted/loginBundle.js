@@ -19,8 +19,6 @@ var handleLogin = function handleLogin(e) {
 
   console.log($("input[name=_csrf]").val());
 
-  console.log($("#loginForm").serialize());
-
   sendAjax('POST', $("#loginForm").attr("action"), $("#loginForm").serialize(), redirect);
 
   return false;
@@ -45,6 +43,7 @@ var handleSignup = function handleSignup(e) {
   return false;
 };
 
+// to log in
 var renderLogin = function renderLogin() {
   return React.createElement(
     Panel,
@@ -88,6 +87,7 @@ var renderLogin = function renderLogin() {
   );
 };
 
+// to sign in
 var renderSignup = function renderSignup() {
   return React.createElement(
     Panel,

@@ -28,7 +28,8 @@
     "serve-favicon": "^2.3.0",
     "underscore": "^1.8.3",
     "react-bootstrap": "0.30.9",
-    "yummly": "0.2.4"
+    "yummly": "0.2.4",
+    "require": "2.4.20" 
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",

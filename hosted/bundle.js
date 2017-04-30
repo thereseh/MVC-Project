@@ -24,6 +24,7 @@ var SplitButton = ReactBootstrap.SplitButton;
 var MenuItem = ReactBootstrap.MenuItem;
 var DropdownButton = ReactBootstrap.DropdownButton;
 
+// loads recipes and categories from database
 var handleRecipe = function handleRecipe(e) {
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {
     recipeRenderer.loadRecipesFromServer();
@@ -33,8 +34,7 @@ var handleRecipe = function handleRecipe(e) {
   return false;
 };
 
-/* Surely not a safe/good way to do this,
-   but was what I could come up with */
+/* Removes a recipe from the database */
 var removeRecipe = function removeRecipe(name, ingr, notes, cat) {
   // get key value, not safe
   var key = $("#cs")[0].attributes.value.value;
@@ -48,10 +48,12 @@ var removeRecipe = function removeRecipe(name, ingr, notes, cat) {
   return false;
 };
 
+// renders modal for adding a recipe
 var renderModal = function renderModal() {
   var _React$createElement, _React$createElement2;
 
   var recipeList = this;
+  // first populate the category dropdown with categries from array in states
   var cateNodes = this.state.data.map(function (category) {
     return React.createElement(
       MenuItem,
@@ -62,6 +64,7 @@ var renderModal = function renderModal() {
     );
   });
 
+  // render modal with form for submit
   return React.createElement(
     "div",
     null,
@@ -154,10 +157,10 @@ var renderModal = function renderModal() {
   );
 };
 
+// renders the child list of recipes retrieved from database using props from parent
 var renderRecipe = function renderRecipe() {
   var _this = this;
 
-  //use the inherited variables from Song Container parent element. This Song element will have a specific artist and songTitle passed in from the Song Container when it renders. 
   var recipeList = this;
   return React.createElement(
     Col,
@@ -225,6 +228,7 @@ var renderRecipe = function renderRecipe() {
   );
 };
 
+// renders instances of recipes
 var renderRecipeList = function renderRecipeList() {
   if (this.state.data.length === 0) {
     return React.createElement(
@@ -232,8 +236,8 @@ var renderRecipeList = function renderRecipeList() {
       { className: "recipeList" },
       React.createElement(
         "h3",
-        { className: "emptyDomo" },
-        " No recipes yet "
+        { className: "emptyRecipe" },
+        " No recipes yet"
       )
     );
   }
@@ -280,6 +284,7 @@ var createModal = function createModal(csrf) {
       };
     },
 
+    // calls the database to retrieve categories
     loadCategoriesFromServer: function loadCategoriesFromServer() {
       sendAjax('GET', '/getCategories', null, function (data) {
         this.setState({
@@ -287,6 +292,7 @@ var createModal = function createModal(csrf) {
         });
       }.bind(this));
     },
+    // if you are trying to submit and there is no name, change state of input to error
     handleSubmit: function handleSubmit(e) {
       e.preventDefault();
       var length = this.state.value.length;
@@ -298,15 +304,21 @@ var createModal = function createModal(csrf) {
         handleRecipe(e);
       }
     },
+
+    // when typing into the name field
     handleChange: function handleChange(e) {
       this.setState({ value: e.target.value });
     },
+
+    // when typing into the category field
     handleCatChange: function handleCatChange(e) {
       this.setState({ cat: e.target.value });
     },
     close: function close() {
       this.setState({ showModal: false });
     },
+
+    // if choosing category from the dropdown
     toggleChildMenu: function toggleChildMenu(value) {
       this.setState({ cat: value });
     },
@@ -345,13 +357,16 @@ var Recipe = React.createClass({
       open: false
     };
   },
+  // toggling to show/hide recipe info
   toggleChildMenu: function toggleChildMenu() {
     this.setState({ open: !this.state.open });
   }
 });
 
+// set up basics
 var setup = function setup(csrf) {
   var addRecipeButton = document.querySelector("#addRecipe");
+
   addRecipeButton.addEventListener("click", function (e) {
     e.preventDefault();
     createModal(csrf);

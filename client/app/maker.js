@@ -21,16 +21,17 @@ let MenuItem = ReactBootstrap.MenuItem;
 let DropdownButton = ReactBootstrap.DropdownButton;
 
 
+// loads recipes and categories from database
 const handleRecipe = (e) => {
-  sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {    recipeRenderer.loadRecipesFromServer();
-  modalRenderer.loadCategoriesFromServer();
+  sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {    
+    recipeRenderer.loadRecipesFromServer();
+    modalRenderer.loadCategoriesFromServer();
   });
 
   return false;
 };
 
-/* Surely not a safe/good way to do this,
-   but was what I could come up with */
+/* Removes a recipe from the database */
 const removeRecipe = (name, ingr, notes, cat) => {
   // get key value, not safe
   let key = $("#cs")[0].attributes.value.value;
@@ -44,15 +45,17 @@ const removeRecipe = (name, ingr, notes, cat) => {
   return false;
 };
 
-
+// renders modal for adding a recipe
 const renderModal = function () {
    const recipeList = this;
+  // first populate the category dropdown with categries from array in states
    const cateNodes = this.state.data.map(function (category) {
     return (
       <MenuItem key={category._id} eventKey={category._id} value={category.category} onClick={ ()=> {recipeList.toggleChildMenu(category.category)}}>{category.category}</MenuItem>
     );
   });
   
+// render modal with form for submit
   return (
     <div>
         <Modal show={this.state.showModal} onHide={this.close}>
@@ -106,8 +109,8 @@ const renderModal = function () {
   );
 };
 
+// renders the child list of recipes retrieved from database using props from parent
 const renderRecipe = function() {
-  //use the inherited variables from Song Container parent element. This Song element will have a specific artist and songTitle passed in from the Song Container when it renders. 
     const recipeList = this;
   return (
       <Col sm={6}md={4}>
@@ -133,13 +136,12 @@ const renderRecipe = function() {
   )
 };
 
-
-
+// renders instances of recipes
 const renderRecipeList = function () {
   if (this.state.data.length === 0) {
     return ( 
-      <div className="recipeList" >
-        <h3 className="emptyDomo" > No recipes yet </h3> 
+      <div className="recipeList">
+        <h3 className="emptyRecipe"> No recipes yet</h3> 
       </div>
     );
   }
@@ -178,6 +180,7 @@ const createModal = function(csrf) {
       cat: '',
     };
   },
+    // calls the database to retrieve categories
     loadCategoriesFromServer: function () {
       sendAjax('GET', '/getCategories', null, function (data) {
         this.setState({
@@ -185,6 +188,7 @@ const createModal = function(csrf) {
         });
       }.bind(this));
     },
+    // if you are trying to submit and there is no name, change state of input to error
     handleSubmit(e) {
       e.preventDefault();
       const length = this.state.value.length;
@@ -197,15 +201,18 @@ const createModal = function(csrf) {
         handleRecipe(e);
       }
     },
+    // when typing into the name field
      handleChange(e) {
     this.setState({ value: e.target.value });
   },
+    // when typing into the category field
     handleCatChange(e) {
     this.setState({ cat: e.target.value });
   },
     close() {
     this.setState({ showModal: false });
   },
+    // if choosing category from the dropdown
     toggleChildMenu(value) {
       this.setState({cat: value});
     },
@@ -244,15 +251,17 @@ const Recipe = React.createClass({
         open: false,
       };
     },
+  // toggling to show/hide recipe info
    toggleChildMenu() {
       this.setState({open: !this.state.open});
     },
 });
 
-
+// set up basics
 const setup = function (csrf) {
    const addRecipeButton = document.querySelector("#addRecipe");
-      addRecipeButton.addEventListener("click", (e) => {
+  
+   addRecipeButton.addEventListener("click", (e) => {
       e.preventDefault(); 
       createModal(csrf);
       return false;
