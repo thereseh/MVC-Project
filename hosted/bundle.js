@@ -4,7 +4,6 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 var recipeRenderer = void 0;
 var modalRenderer = void 0;
-
 var recipeForm = void 0;
 var RecipeFormClass = void 0;
 var RecipeListClass = void 0;
@@ -25,26 +24,62 @@ var MenuItem = ReactBootstrap.MenuItem;
 var DropdownButton = ReactBootstrap.DropdownButton;
 
 // loads recipes and categories from database
-var handleRecipe = function handleRecipe(e) {
+var handleRecipe = function handleRecipe() {
+
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {
     recipeRenderer.loadRecipesFromServer();
     modalRenderer.loadCategoriesFromServer();
+    recipeRenderer.loadCategoriesFromServer();
   });
 
   return false;
 };
 
 /* Removes a recipe from the database */
-var removeRecipe = function removeRecipe(name, ingr, notes, cat) {
+var removeRecipe = function removeRecipe(id) {
   // get key value, not safe
   var key = $("#cs")[0].attributes.value.value;
   // data to send
-  var data = "name=" + name + "&ingr=" + ingr + "&notes=" + notes + "&category=" + cat + "&_csrf=" + key;
+  var data = "id=" + id + "&_csrf=" + key;
   data = data.replace(/ /g, '+');
   sendAjax('DELETE', '/removeRecipe', data, function () {
     recipeRenderer.loadRecipesFromServer();
+    recipeRenderer.loadCategoriesFromServer();
   });
 
+  return false;
+};
+
+var returnKey = function returnKey() {
+  return $("#cs")[0].attributes.value.value;
+};
+var returnData = function returnData(name, ingredients, notes, category, id) {
+  var data = {
+    name: name,
+    category: category,
+    ingredients: ingredients,
+    notes: notes,
+    id: id
+  };
+  return data;
+};
+
+var getSorted = function getSorted(category) {
+  var key = $("#cs")[0].attributes.value.value;
+  var data = "category=" + category + "&_csrf=" + key;
+  recipeRenderer.sortedCategoriesFromServer(data);
+  recipeRenderer.loadCategoriesFromServer();
+
+  return false;
+};
+
+var editRecipe = function editRecipe(id) {
+  var data = "id=" + id + "&" + $("#modalRenderer").serialize();
+  sendAjax('PUT', $("#modalRenderer").attr("action"), data, function () {
+    recipeRenderer.loadRecipesFromServer();
+    recipeRenderer.loadCategoriesFromServer();
+    modalRenderer.loadCategoriesFromServer();
+  });
   return false;
 };
 
@@ -76,8 +111,8 @@ var renderModal = function renderModal() {
         { id: "modalRenderer",
           onSubmit: this.handleSubmit,
           name: "modalRenderer",
-          action: "/maker",
-          method: "POST",
+          action: this.state.action,
+          method: this.state.method,
           className: "modalRenderer"
         },
         React.createElement(
@@ -105,7 +140,7 @@ var renderModal = function renderModal() {
               null,
               "Name"
             ),
-            React.createElement(FormControl, { id: "recipeName", componentClass: "input", name: "name", value: this.state.value, placeholder: this.state.placeholder, onChange: this.handleChange }),
+            React.createElement(FormControl, { id: "recipeName", componentClass: "input", name: "name", value: this.state.name, placeholder: this.state.placeholder, onChange: this.handleChangeName }),
             React.createElement(FormControl.Feedback, null)
           ),
           React.createElement(
@@ -117,8 +152,8 @@ var renderModal = function renderModal() {
               "Category"
             ),
             React.createElement(FormControl, { id: "categoryName", componentClass: "input", name: "category",
-              value: this.state.cat,
-              onChange: this.handleCatChange,
+              value: this.state.category,
+              onChange: this.handleChangeCat,
               placeholder: "Category..." })
           ),
           React.createElement(
@@ -129,7 +164,7 @@ var renderModal = function renderModal() {
               null,
               "Ingredients"
             ),
-            React.createElement(FormControl, (_React$createElement = { id: "ingred", componentClass: "textarea" }, _defineProperty(_React$createElement, "id", "recipeIngr"), _defineProperty(_React$createElement, "name", "ingr"), _defineProperty(_React$createElement, "placeholder", "Ingredients..."), _React$createElement))
+            React.createElement(FormControl, (_React$createElement = { id: "ingred", componentClass: "textarea" }, _defineProperty(_React$createElement, "id", "recipeIngr"), _defineProperty(_React$createElement, "value", this.state.ingredients), _defineProperty(_React$createElement, "onChange", this.handleChangeIngr), _defineProperty(_React$createElement, "name", "ingredients"), _defineProperty(_React$createElement, "placeholder", "Ingredients..."), _React$createElement))
           ),
           React.createElement(
             FormGroup,
@@ -139,7 +174,7 @@ var renderModal = function renderModal() {
               null,
               "Notes"
             ),
-            React.createElement(FormControl, (_React$createElement2 = { id: "notes", componentClass: "textarea" }, _defineProperty(_React$createElement2, "id", "recipeNotes"), _defineProperty(_React$createElement2, "name", "notes"), _defineProperty(_React$createElement2, "placeholder", "Notes/Instructions..."), _React$createElement2))
+            React.createElement(FormControl, (_React$createElement2 = { id: "notes", componentClass: "textarea" }, _defineProperty(_React$createElement2, "id", "recipeNotes"), _defineProperty(_React$createElement2, "value", this.state.notes), _defineProperty(_React$createElement2, "onChange", this.handleChangeNotes), _defineProperty(_React$createElement2, "name", "notes"), _defineProperty(_React$createElement2, "placeholder", "Notes/Instructions..."), _React$createElement2))
           ),
           React.createElement("input", { type: "hidden", name: "_csrf", value: this.props.csrf })
         ),
@@ -216,7 +251,14 @@ var renderRecipe = function renderRecipe() {
             React.createElement(
               Button,
               { onClick: function onClick() {
-                  removeRecipe(_this.props.name, _this.props.ingredients, _this.props.notes, _this.props.category);
+                  createModal(returnKey(), '/editRecipe', 'PUT', returnData(_this.props.name, _this.props.ingredients, _this.props.notes, _this.props.category, _this.props.id));
+                } },
+              " Edit"
+            ),
+            React.createElement(
+              Button,
+              { onClick: function onClick() {
+                  removeRecipe(_this.props.id);
                 } },
               React.createElement(Glyphicon, { glyph: "trash" }),
               " "
@@ -243,11 +285,20 @@ var renderRecipeList = function renderRecipeList() {
   }
 
   var recipeList = this;
+  var cateNodes = this.state.data.map(function (category) {
+    return React.createElement(
+      MenuItem,
+      { key: category._id, eventKey: category._id, value: category.category, onClick: function onClick() {
+          getSorted(category.category);
+        } },
+      category.category
+    );
+  });
   var recipeNodes = this.state.data.map(function (recipe) {
     return React.createElement(
       "div",
       { key: recipe._id, className: "recipe" },
-      React.createElement(Recipe, { name: recipe.name, category: recipe.category, ingredients: recipe.ingredients, notes: recipe.notes })
+      React.createElement(Recipe, { name: recipe.name, category: recipe.category, ingredients: recipe.ingredients, notes: recipe.notes, id: recipe._id })
     );
   });
 
@@ -261,6 +312,18 @@ var renderRecipeList = function renderRecipeList() {
       value: this.props.csrf
     }),
     React.createElement(
+      DropdownButton,
+      { bsStyle: "default", title: "Categories", id: "sortDropDown" },
+      React.createElement(
+        MenuItem,
+        { eventKey: 0, value: "all", onClick: function onClick() {
+            getSorted('all');
+          } },
+        "All"
+      ),
+      cateNodes
+    ),
+    React.createElement(
       Row,
       { className: "show-grid" },
       " ",
@@ -270,23 +333,34 @@ var renderRecipeList = function renderRecipeList() {
   );
 };
 
-var createModal = function createModal(csrf) {
+var createModal = function createModal(csrf, action, method, data) {
   AddNewRecipeClass = React.createClass({
     displayName: "AddNewRecipeClass",
     getInitialState: function getInitialState() {
       return {
         showModal: true,
-        value: '',
         validation: '',
         placeholder: 'Name of recipe...',
         data: [],
-        cat: ''
+        category: data.category,
+        name: data.name,
+        ingredients: data.ingredients,
+        notes: data.notes,
+        action: action,
+        method: method,
+        id: data.id
       };
     },
 
     // calls the database to retrieve categories
     loadCategoriesFromServer: function loadCategoriesFromServer() {
       sendAjax('GET', '/getCategories', null, function (data) {
+        console.dir(data);
+        var uniqueNames = data.categories.filter(function (val, id, array) {
+          return array.indexOf(val) == id;
+        });
+
+        console.dir(uniqueNames);
         this.setState({
           data: data.categories
         });
@@ -295,24 +369,34 @@ var createModal = function createModal(csrf) {
     // if you are trying to submit and there is no name, change state of input to error
     handleSubmit: function handleSubmit(e) {
       e.preventDefault();
-      var length = this.state.value.length;
+      var length = this.state.name.length;
       if (length === 0) {
         this.setState({ validation: 'error' });
         this.setState({ placeholder: 'Please, give me a name!' });
       } else {
         this.setState({ showModal: false });
-        handleRecipe(e);
+        if (this.state.method === 'POST') {
+          handleRecipe();
+        } else {
+          editRecipe(this.state.id);
+        }
       }
     },
 
     // when typing into the name field
-    handleChange: function handleChange(e) {
-      this.setState({ value: e.target.value });
+    handleChangeName: function handleChangeName(e) {
+      this.setState({ name: e.target.value });
+    },
+    handleChangeNotes: function handleChangeNotes(e) {
+      this.setState({ notes: e.target.value });
+    },
+    handleChangeIngr: function handleChangeIngr(e) {
+      this.setState({ ingredients: e.target.value });
     },
 
     // when typing into the category field
-    handleCatChange: function handleCatChange(e) {
-      this.setState({ cat: e.target.value });
+    handleChangeCat: function handleChangeCat(e) {
+      this.setState({ category: e.target.value });
     },
     close: function close() {
       this.setState({ showModal: false });
@@ -320,7 +404,7 @@ var createModal = function createModal(csrf) {
 
     // if choosing category from the dropdown
     toggleChildMenu: function toggleChildMenu(value) {
-      this.setState({ cat: value });
+      this.setState({ category: value });
     },
 
     componentDidMount: function componentDidMount() {
@@ -337,7 +421,8 @@ var defaultRecipeProps = function defaultRecipeProps() {
     name: '',
     category: '',
     ingredients: '',
-    notes: ''
+    notes: '',
+    id: ''
   };
 };
 
@@ -347,10 +432,11 @@ var Recipe = React.createClass({
   getDefaultProps: defaultRecipeProps,
   render: renderRecipe,
   propTypes: {
-    name: React.PropTypes.string.isRequired,
-    category: React.PropTypes.string.isRequired,
-    ingredients: React.PropTypes.string.isRequired,
-    notes: React.PropTypes.string.isRequired
+    name: React.PropTypes.string,
+    category: React.PropTypes.string,
+    ingredients: React.PropTypes.string,
+    notes: React.PropTypes.string,
+    id: React.PropTypes.string
   },
   getInitialState: function getInitialState() {
     return {
@@ -367,9 +453,16 @@ var Recipe = React.createClass({
 var setup = function setup(csrf) {
   var addRecipeButton = document.querySelector("#addRecipe");
 
+  var data = {
+    name: '',
+    category: '',
+    notes: '',
+    ingredients: '',
+    id: ''
+  };
   addRecipeButton.addEventListener("click", function (e) {
     e.preventDefault();
-    createModal(csrf);
+    createModal(csrf, '/maker', 'POST', data);
     return false;
   });
 
@@ -378,6 +471,26 @@ var setup = function setup(csrf) {
 
     loadRecipesFromServer: function loadRecipesFromServer() {
       sendAjax('GET', '/getRecipes', null, function (data) {
+        console.dir(data);
+        this.setState({
+          data: data.recipes
+        });
+      }.bind(this));
+    },
+    loadCategoriesFromServer: function loadCategoriesFromServer() {
+      sendAjax('GET', '/getCategories', null, function (data) {
+        var uniqueNames = data.categories.filter(function (val, id, array) {
+          return array.indexOf(val) == id;
+        });
+
+        console.dir(uniqueNames);
+        this.setState({
+          cate: data.categories
+        });
+      }.bind(this));
+    },
+    sortedCategoriesFromServer: function sortedCategoriesFromServer(info) {
+      sendAjax('PUT', '/getSorted', info, function (data) {
         this.setState({
           data: data.recipes
         });
@@ -386,6 +499,7 @@ var setup = function setup(csrf) {
     getInitialState: function getInitialState() {
       return {
         data: [],
+        cate: [],
         open: false
       };
     },

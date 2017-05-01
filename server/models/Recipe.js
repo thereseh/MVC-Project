@@ -52,7 +52,7 @@ const RecipeSchema = new mongoose.Schema({
 
 RecipeSchema.statics.toAPI = (doc) => ({
   name: doc.name,
-  ingredients: doc.ingr,
+  ingredients: doc.ingredients,
   notes: doc.notes,
   category: doc.category,
 });
@@ -71,20 +71,46 @@ RecipeSchema.statics.findCategoriesByOwner = (ownerId, callback) => {
     owner: convertId(ownerId),
   };
 
-  return RecipeModel.find(search).select('category').exec(callback);
+  return RecipeModel.distinct('category', search,callback);
+};
+
+// by owner, returns recipies by category
+RecipeSchema.statics.findRecipiesByCategories = (data, ownerId, callback) => {
+  const search = {
+    owner: convertId(ownerId),
+    category: data.category 
+  };
+
+  console.dir(`model:`);
+  console.dir(search);
+
+  return RecipeModel.find(search).select('name ingredients notes category').exec(callback);
 };
 
 // finds a specific domo and removes it
 RecipeSchema.statics.findAndRemove = (data, ownerId, callback) => {
   const search = {
     owner: ownerId,
+    _id: data.id
+  };
+
+  return RecipeModel.find(search).remove().exec(callback);
+};
+
+RecipeSchema.statics.findAndUpdate = (data, ownerId, callback) => {
+  const search = {
+    owner: ownerId,
+    _id: data.id
+  };
+  
+  const update = {
     name: data.name,
     ingredients: data.ingredients,
     notes: data.notes,
     category: data.category,
   };
 
-  return RecipeModel.find(search).remove().exec(callback);
+  return RecipeModel.find(search).update(update).exec(callback);
 };
 
 

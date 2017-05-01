@@ -17,6 +17,28 @@ const searchPage = (req, res) => {
   res.render('yummly', { csrfToken: req.csrfToken() });
 };
 
+const editRecipe = (request, response) => {
+  const req = request;
+  const res = response;
+  
+   const data = {
+    name: req.body.name,
+    ingredients: req.body.ingredients,
+    notes: req.body.notes,
+    id: req.body.id,
+    category: req.body.category
+  };
+
+  return Recipe.RecipeModel.findAndUpdate(data, req.session.account._id, (err, docs) => {
+    if (err) {
+      console.log(err);
+      return res.status(400).json({ error: 'An error occurred' });
+    }
+
+    return res.json({ recipes: docs });
+  });
+};
+
 const makeRecipe = (req, res) => {
   if (!req.body.name) {
     return res.status(400).json({ error: 'Need to fill out fields!' });
@@ -24,12 +46,12 @@ const makeRecipe = (req, res) => {
 
   const recipeData = {
     name: req.body.name,
-    ingredients: req.body.ingr,
+    ingredients: req.body.ingredients,
     category: req.body.category,
     notes: req.body.notes,
     owner: req.session.account._id,
   };
-
+  
   const newRecipe = new Recipe.RecipeModel(recipeData);
 
   const recipePromise = newRecipe.save();
@@ -47,6 +69,26 @@ const makeRecipe = (req, res) => {
 
   return recipePromise;
 };
+  
+  const getSorted = (request, response) => {
+  const req = request;
+  const res = response;
+
+  const data = {
+    category: req.body.category
+  };
+  console.dir(`controllrs:`);
+  console.dir(data);
+  return Recipe.RecipeModel.findRecipiesByCategories(data, req.session.account._id, (err, docs) => {
+    if (err) {
+      console.log(err);
+      return res.status(400).json({ error: 'An error occurred' });
+    }
+
+    return res.json({ recipes: docs });
+  });
+};
+
 
 // gets all recipes from database
 const getRecipes = (request, response) => {
@@ -83,10 +125,11 @@ const removeRecipe = (request, response) => {
   const req = request;
   const res = response;
   const data = {
+    id: req.body.id,
     name: req.body.name,
     ingredients: req.body.ingr,
-    notes: req.body.notes,
     category: req.body.category,
+    notes: req.body.notes
   };
   return Recipe.RecipeModel.findAndRemove(data, req.session.account._id, (err, docs) => {
     if (err) {
@@ -98,7 +141,9 @@ const removeRecipe = (request, response) => {
   });
 };
 
+module.exports.getSorted = getSorted;
 module.exports.searchPage = searchPage;
+module.exports.editRecipe = editRecipe;
 module.exports.makerPage = makerPage;
 module.exports.getRecipes = getRecipes;
 module.exports.make = makeRecipe;

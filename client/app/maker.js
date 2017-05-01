@@ -1,6 +1,5 @@
 let recipeRenderer;
 let modalRenderer;
-
 let recipeForm;
 let RecipeFormClass;
 let RecipeListClass;
@@ -20,28 +19,64 @@ let SplitButton = ReactBootstrap.SplitButton;
 let MenuItem = ReactBootstrap.MenuItem;
 let DropdownButton = ReactBootstrap.DropdownButton;
 
-
 // loads recipes and categories from database
-const handleRecipe = (e) => {
+const handleRecipe = () => {
+  
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {    
     recipeRenderer.loadRecipesFromServer();
     modalRenderer.loadCategoriesFromServer();
+    recipeRenderer.loadCategoriesFromServer();
   });
 
   return false;
 };
 
 /* Removes a recipe from the database */
-const removeRecipe = (name, ingr, notes, cat) => {
+const removeRecipe = (id) => {
   // get key value, not safe
   let key = $("#cs")[0].attributes.value.value;
   // data to send
-  let data = `name=${name}&ingr=${ingr}&notes=${notes}&category=${cat}&_csrf=${key}`;
+  let data = `id=${id}&_csrf=${key}`;
   data = data.replace(/ /g, '+');
   sendAjax('DELETE', '/removeRecipe', data, function () {
     recipeRenderer.loadRecipesFromServer();
+    recipeRenderer.loadCategoriesFromServer();
   });
 
+  return false;
+};
+
+
+const returnKey = () => {
+  return $("#cs")[0].attributes.value.value;
+};
+const returnData = (name, ingredients, notes, category, id) => {
+  let data = {
+    name: name,
+    category: category,
+    ingredients: ingredients,
+    notes: notes,
+    id: id
+  };
+  return data;
+};
+
+const getSorted = (category) =>  {
+  let key = $("#cs")[0].attributes.value.value;
+  let data = `category=${category}&_csrf=${key}`;
+  recipeRenderer.sortedCategoriesFromServer(data);
+  recipeRenderer.loadCategoriesFromServer();
+  
+  return false;
+};
+
+const editRecipe = (id) => {
+  let data = `id=${id}&` + $("#modalRenderer").serialize();
+  sendAjax('PUT', $("#modalRenderer").attr("action"), data, function () {    
+    recipeRenderer.loadRecipesFromServer();
+    recipeRenderer.loadCategoriesFromServer();
+    modalRenderer.loadCategoriesFromServer();
+  });
   return false;
 };
 
@@ -62,8 +97,8 @@ const renderModal = function () {
         <form id="modalRenderer"
         onSubmit={this.handleSubmit}
         name="modalRenderer"
-        action="/maker"
-        method="POST"
+        action={this.state.action}
+        method={this.state.method}
         className="modalRenderer"
       >
           <Modal.Header closeButton>
@@ -74,27 +109,28 @@ const renderModal = function () {
           {cateNodes}
           </DropdownButton>
            <FormGroup controlId="formControlsName" id="formName"  validationState={this.state.validation}>
+    
             <ControlLabel>Name</ControlLabel>
-            <FormControl id="recipeName" componentClass="input" name="name" value={this.state.value} placeholder={this.state.placeholder} onChange={this.handleChange}/>
+            <FormControl id="recipeName" componentClass="input" name="name" value={this.state.name} placeholder={this.state.placeholder} onChange={this.handleChangeName}/>
             <FormControl.Feedback />
             </FormGroup>
             
             <FormGroup controlId="formControlsCategory">
             <ControlLabel>Category</ControlLabel>
             <FormControl id="categoryName" componentClass="input" name="category"
-            value={this.state.cat}
-            onChange={this.handleCatChange}
+            value={this.state.category}
+            onChange={this.handleChangeCat}
             placeholder="Category..."/>
             </FormGroup>
             
             <FormGroup controlId="formControlsIngredients">
             <ControlLabel>Ingredients</ControlLabel>
-            <FormControl id="ingred" componentClass="textarea" id="recipeIngr" name="ingr" placeholder="Ingredients..." />
+            <FormControl id="ingred" componentClass="textarea" id="recipeIngr" value={this.state.ingredients} onChange={this.handleChangeIngr} name="ingredients" placeholder="Ingredients..." />
             </FormGroup>
             
             <FormGroup controlId="formControlsNotes">
             <ControlLabel>Notes</ControlLabel>
-            <FormControl id="notes" componentClass="textarea" id="recipeNotes" name="notes"  placeholder="Notes/Instructions..." />
+            <FormControl id="notes" componentClass="textarea" id="recipeNotes" value={this.state.notes} onChange={this.handleChangeNotes} name="notes"  placeholder="Notes/Instructions..." />
             </FormGroup>
             <input type="hidden" name="_csrf" value={this.props.csrf} />
           </Modal.Body>
@@ -124,11 +160,15 @@ const renderRecipe = function() {
         <h3 className="textNotes" >Notes: 
           <br /></h3><p className="output">{this.props.notes}</p>
         <Modal.Footer id="listFooter">
+           <Button onClick = {
+          () => { 
+            createModal(returnKey(), '/editRecipe', 'PUT', returnData(this.props.name, this.props.ingredients, this.props.notes, this.props.category, this.props.id))}}> Edit
+            </Button>
         <Button onClick = {
           () => { 
-            removeRecipe(this.props.name, this.props.ingredients, this.props.notes, this.props.category)
+            removeRecipe(this.props.id)
           }}><Glyphicon glyph = "trash"/> </Button>
-              </Modal.Footer>
+        </Modal.Footer>
           </div>
        </Collapse>
       </Well> 
@@ -147,10 +187,15 @@ const renderRecipeList = function () {
   }
 
   const recipeList = this;
+   const cateNodes = this.state.data.map(function (category) {
+    return (
+      <MenuItem key={category._id} eventKey={category._id} value={category.category} onClick={ ()=> {getSorted(category.category)}}>{category.category}</MenuItem>
+    );
+  });
   const recipeNodes = this.state.data.map(function (recipe) {
     return (
-      <div key={recipe._id} className="recipe" >
-      <Recipe name={recipe.name} category={recipe.category} ingredients={recipe.ingredients} notes={recipe.notes}/>
+      <div key={recipe._id} className="recipe">
+      <Recipe name={recipe.name} category={recipe.category} ingredients={recipe.ingredients} notes={recipe.notes} id={recipe._id}/>
       </div>
     );
   });
@@ -163,26 +208,41 @@ const renderRecipeList = function () {
       name = "_csrf"
       value = {this.props.csrf}
     /> 
+      <DropdownButton bsStyle="default" title="Categories" id="sortDropDown">
+        <MenuItem eventKey={0} value='all' onClick={ ()=> {getSorted('all')}}>All</MenuItem>
+          {cateNodes}
+      </DropdownButton>
       <Row className="show-grid" > {recipeNodes} </Row> 
       </div>
   );
+  
 };
 
-const createModal = function(csrf) {
+const createModal = function(csrf, action, method, data) {
   AddNewRecipeClass = React.createClass({
     getInitialState() {
     return { 
       showModal: true,
-      value: '',
       validation: '',
       placeholder: 'Name of recipe...',
       data: [],
-      cat: '',
+      category: data.category,
+      name: data.name,
+      ingredients: data.ingredients,
+      notes: data.notes,
+      action: action,
+      method: method,
+      id: data.id
     };
   },
     // calls the database to retrieve categories
     loadCategoriesFromServer: function () {
       sendAjax('GET', '/getCategories', null, function (data) {
+        console.dir(data);
+        const uniqueNames = data.categories.filter((val,id,array) => array.indexOf(val) == id);
+
+        
+        console.dir(uniqueNames);
         this.setState({
           data: data.categories,
         });
@@ -191,30 +251,40 @@ const createModal = function(csrf) {
     // if you are trying to submit and there is no name, change state of input to error
     handleSubmit(e) {
       e.preventDefault();
-      const length = this.state.value.length;
+      const length = this.state.name.length;
       if (length === 0) {
         this.setState({ validation: 'error' });
         this.setState({ placeholder: 'Please, give me a name!' });
       }
       else {
-         this.setState({ showModal: false });
-        handleRecipe(e);
+         this.setState({ showModal: false }); 
+        if (this.state.method === 'POST') {
+          handleRecipe();
+        } else {
+          editRecipe(this.state.id);
+        }
       }
     },
     // when typing into the name field
-     handleChange(e) {
-    this.setState({ value: e.target.value });
-  },
+     handleChangeName(e) {
+        this.setState({ name: e.target.value });
+     },
+     handleChangeNotes(e) {
+        this.setState({ notes: e.target.value });
+     },
+     handleChangeIngr(e) {
+        this.setState({ ingredients: e.target.value });
+     },
     // when typing into the category field
-    handleCatChange(e) {
-    this.setState({ cat: e.target.value });
+    handleChangeCat(e) {
+    this.setState({ category: e.target.value });
   },
     close() {
     this.setState({ showModal: false });
   },
     // if choosing category from the dropdown
     toggleChildMenu(value) {
-      this.setState({cat: value});
+      this.setState({category: value});
     },
     componentDidMount: function () {
       this.loadCategoriesFromServer();
@@ -226,25 +296,26 @@ const createModal = function(csrf) {
   );
 };
 
-const defaultRecipeProps = () => {
+const defaultRecipeProps = function () {
   return {
     open: false,
     name: '',
     category: '',
     ingredients: '',
     notes: '',
+    id: ''
   }
 };
-
 
 const Recipe = React.createClass({
   getDefaultProps: defaultRecipeProps,
   render: renderRecipe,
   propTypes: {
-    name: React.PropTypes.string.isRequired,
-    category: React.PropTypes.string.isRequired,
-    ingredients: React.PropTypes.string.isRequired,
-    notes: React.PropTypes.string.isRequired,
+    name: React.PropTypes.string,
+    category: React.PropTypes.string,
+    ingredients: React.PropTypes.string,
+    notes: React.PropTypes.string,
+    id: React.PropTypes.string
   },
   getInitialState: function () {
       return {
@@ -261,15 +332,41 @@ const Recipe = React.createClass({
 const setup = function (csrf) {
    const addRecipeButton = document.querySelector("#addRecipe");
   
+  let data = {
+    name: '',
+    category: '',
+    notes: '',
+    ingredients: '',
+    id: ''
+  };
    addRecipeButton.addEventListener("click", (e) => {
       e.preventDefault(); 
-      createModal(csrf);
+      createModal(csrf, '/maker', 'POST', data);
       return false;
    });
 
   RecipeListClass = React.createClass({
     loadRecipesFromServer: function () {
       sendAjax('GET', '/getRecipes', null, function (data) {
+        console.dir(data);
+        this.setState({
+          data: data.recipes,
+        });
+      }.bind(this));
+    },
+    loadCategoriesFromServer: function () {
+      sendAjax('GET', '/getCategories', null, function (data) {
+         const uniqueNames = data.categories.filter((val,id,array) => array.indexOf(val) == id);
+
+        
+        console.dir(uniqueNames);
+        this.setState({
+          cate: data.categories,
+        });
+      }.bind(this));
+    },
+    sortedCategoriesFromServer: function (info) {
+      sendAjax('PUT', '/getSorted', info, function (data) {
         this.setState({
           data: data.recipes,
         });
@@ -278,6 +375,7 @@ const setup = function (csrf) {
     getInitialState: function () {
       return {
         data: [],
+        cate: [],
         open: false,
       };
     },
