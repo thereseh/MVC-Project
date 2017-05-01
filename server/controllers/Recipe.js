@@ -2,6 +2,7 @@ const models = require('../models');
 
 const Recipe = models.Recipe;
 
+// renders the recipe book page
 const makerPage = (req, res) => {
   Recipe.RecipeModel.findByOwner(req.session.account._id, (err, docs) => {
     if (err) {
@@ -13,10 +14,12 @@ const makerPage = (req, res) => {
   });
 };
 
+// renders the yummly search page
 const searchPage = (req, res) => {
   res.render('yummly', { csrfToken: req.csrfToken() });
 };
 
+// edits the recipe
 const editRecipe = (request, response) => {
   const req = request;
   const res = response;
@@ -39,6 +42,7 @@ const editRecipe = (request, response) => {
   });
 };
 
+// creates a recip
 const makeRecipe = (req, res) => {
   if (!req.body.name) {
     return res.status(400).json({ error: 'Need to fill out fields!' });
@@ -70,6 +74,7 @@ const makeRecipe = (req, res) => {
   return recipePromise;
 };
 
+// for future, sort by category
 const getSorted = (request, response) => {
   const req = request;
   const res = response;

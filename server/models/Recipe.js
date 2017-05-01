@@ -97,6 +97,7 @@ RecipeSchema.statics.findAndRemove = (data, ownerId, callback) => {
   return RecipeModel.find(search).remove().exec(callback);
 };
 
+// finds a recipe and updates it
 RecipeSchema.statics.findAndUpdate = (data, ownerId, callback) => {
   const search = {
     owner: ownerId,
