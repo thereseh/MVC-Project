@@ -20,13 +20,13 @@ const searchPage = (req, res) => {
 const editRecipe = (request, response) => {
   const req = request;
   const res = response;
-  
-   const data = {
+
+  const data = {
     name: req.body.name,
     ingredients: req.body.ingredients,
     notes: req.body.notes,
     id: req.body.id,
-    category: req.body.category
+    category: req.body.category,
   };
 
   return Recipe.RecipeModel.findAndUpdate(data, req.session.account._id, (err, docs) => {
@@ -51,7 +51,7 @@ const makeRecipe = (req, res) => {
     notes: req.body.notes,
     owner: req.session.account._id,
   };
-  
+
   const newRecipe = new Recipe.RecipeModel(recipeData);
 
   const recipePromise = newRecipe.save();
@@ -69,15 +69,15 @@ const makeRecipe = (req, res) => {
 
   return recipePromise;
 };
-  
-  const getSorted = (request, response) => {
+
+const getSorted = (request, response) => {
   const req = request;
   const res = response;
 
   const data = {
-    category: req.body.category
+    category: req.body.category,
   };
-  console.dir(`controllrs:`);
+  console.dir('controllrs:');
   console.dir(data);
   return Recipe.RecipeModel.findRecipiesByCategories(data, req.session.account._id, (err, docs) => {
     if (err) {
@@ -129,7 +129,7 @@ const removeRecipe = (request, response) => {
     name: req.body.name,
     ingredients: req.body.ingr,
     category: req.body.category,
-    notes: req.body.notes
+    notes: req.body.notes,
   };
   return Recipe.RecipeModel.findAndRemove(data, req.session.account._id, (err, docs) => {
     if (err) {

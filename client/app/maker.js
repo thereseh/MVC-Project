@@ -24,8 +24,6 @@ const handleRecipe = () => {
   
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {    
     recipeRenderer.loadRecipesFromServer();
-    modalRenderer.loadCategoriesFromServer();
-    recipeRenderer.loadCategoriesFromServer();
   });
 
   return false;
@@ -40,7 +38,6 @@ const removeRecipe = (id) => {
   data = data.replace(/ /g, '+');
   sendAjax('DELETE', '/removeRecipe', data, function () {
     recipeRenderer.loadRecipesFromServer();
-    recipeRenderer.loadCategoriesFromServer();
   });
 
   return false;
@@ -64,8 +61,6 @@ const returnData = (name, ingredients, notes, category, id) => {
 const getSorted = (category) =>  {
   let key = $("#cs")[0].attributes.value.value;
   let data = `category=${category}&_csrf=${key}`;
-  recipeRenderer.sortedCategoriesFromServer(data);
-  recipeRenderer.loadCategoriesFromServer();
   
   return false;
 };
@@ -105,9 +100,6 @@ const renderModal = function () {
           <Modal.Title>Add Recipe</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-          <DropdownButton bsStyle="default" title="Categories" id="catDropDown">
-          {cateNodes}
-          </DropdownButton>
            <FormGroup controlId="formControlsName" id="formName"  validationState={this.state.validation}>
     
             <ControlLabel>Name</ControlLabel>
@@ -155,12 +147,14 @@ const renderRecipe = function() {
         <Button id="showBtn"onClick={ ()=> {recipeList.toggleChildMenu()}}><Glyphicon glyph="chevron-down"/> </Button>
         <Collapse in={recipeList.state.open}>
         <div id="recipeCont">
+          <h3 className="textIngr">Category:
+          <br /></h3><p className="output">{this.props.category}</p> 
         <h3 className="textIngr">Ingredients:
           <br /></h3><p className="output">{this.props.ingredients}</p> 
         <h3 className="textNotes" >Notes: 
           <br /></h3><p className="output">{this.props.notes}</p>
         <Modal.Footer id="listFooter">
-           <Button onClick = {
+           <Button id="editbtn" onClick = {
           () => { 
             createModal(returnKey(), '/editRecipe', 'PUT', returnData(this.props.name, this.props.ingredients, this.props.notes, this.props.category, this.props.id))}}> Edit
             </Button>
@@ -208,10 +202,6 @@ const renderRecipeList = function () {
       name = "_csrf"
       value = {this.props.csrf}
     /> 
-      <DropdownButton bsStyle="default" title="Categories" id="sortDropDown">
-        <MenuItem eventKey={0} value='all' onClick={ ()=> {getSorted('all')}}>All</MenuItem>
-          {cateNodes}
-      </DropdownButton>
       <Row className="show-grid" > {recipeNodes} </Row> 
       </div>
   );
@@ -315,7 +305,7 @@ const Recipe = React.createClass({
     category: React.PropTypes.string,
     ingredients: React.PropTypes.string,
     notes: React.PropTypes.string,
-    id: React.PropTypes.string
+    id: React.PropTypes.string,
   },
   getInitialState: function () {
       return {

@@ -39,6 +39,9 @@ nav:nth-child(1) {
     font-size: 1.3em;
     float: left;
 }
+#editbtn {
+  padding: 3.5px 10px; 
+}
 
 #loginPanel {
    width: 500px;
@@ -54,6 +57,9 @@ nav:nth-child(1) {
   margin-top: 30px;
 }
 
+#searchResults {
+  margin: 15px;
+}
 #sBtn {
   float: right;
 }
@@ -64,6 +70,8 @@ nav:nth-child(1) {
   display: inline-block;
   margin: 0 auto;
   margin-top: 2px;
+  text-align: center;
+  float: none;
 }
 .textIngr, .textNotes {
   font-size: 1.2em;
@@ -73,6 +81,15 @@ nav:nth-child(1) {
 #showBtn {
   float: right;
   display: inline-block;
+}
+
+#searchImg {
+  align-content: center;
+  text-align: center;
+  width: 150px;
+  height: auto;
+  margin: 0 auto;
+  float: none;
 }
 
 #searchBar {

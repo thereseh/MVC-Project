@@ -95,7 +95,6 @@ const handleParams = (req, response, parsedUrl) => {
 };
 
 app.post('/search', (req, res) => {
-  console.log('app.post reached');
   const parsedUrl = url.parse(req.url);
   handleParams(req, res, parsedUrl);
 });

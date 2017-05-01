@@ -71,17 +71,17 @@ RecipeSchema.statics.findCategoriesByOwner = (ownerId, callback) => {
     owner: convertId(ownerId),
   };
 
-  return RecipeModel.distinct('category', search,callback);
+  return RecipeModel.distinct('category', search, callback);
 };
 
 // by owner, returns recipies by category
 RecipeSchema.statics.findRecipiesByCategories = (data, ownerId, callback) => {
   const search = {
     owner: convertId(ownerId),
-    category: data.category 
+    category: data.category,
   };
 
-  console.dir(`model:`);
+  console.dir('model:');
   console.dir(search);
 
   return RecipeModel.find(search).select('name ingredients notes category').exec(callback);
@@ -91,7 +91,7 @@ RecipeSchema.statics.findRecipiesByCategories = (data, ownerId, callback) => {
 RecipeSchema.statics.findAndRemove = (data, ownerId, callback) => {
   const search = {
     owner: ownerId,
-    _id: data.id
+    _id: data.id,
   };
 
   return RecipeModel.find(search).remove().exec(callback);
@@ -100,9 +100,9 @@ RecipeSchema.statics.findAndRemove = (data, ownerId, callback) => {
 RecipeSchema.statics.findAndUpdate = (data, ownerId, callback) => {
   const search = {
     owner: ownerId,
-    _id: data.id
+    _id: data.id,
   };
-  
+
   const update = {
     name: data.name,
     ingredients: data.ingredients,

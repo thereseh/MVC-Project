@@ -28,8 +28,6 @@ var handleRecipe = function handleRecipe() {
 
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {
     recipeRenderer.loadRecipesFromServer();
-    modalRenderer.loadCategoriesFromServer();
-    recipeRenderer.loadCategoriesFromServer();
   });
 
   return false;
@@ -44,7 +42,6 @@ var removeRecipe = function removeRecipe(id) {
   data = data.replace(/ /g, '+');
   sendAjax('DELETE', '/removeRecipe', data, function () {
     recipeRenderer.loadRecipesFromServer();
-    recipeRenderer.loadCategoriesFromServer();
   });
 
   return false;
@@ -67,8 +64,6 @@ var returnData = function returnData(name, ingredients, notes, category, id) {
 var getSorted = function getSorted(category) {
   var key = $("#cs")[0].attributes.value.value;
   var data = "category=" + category + "&_csrf=" + key;
-  recipeRenderer.sortedCategoriesFromServer(data);
-  recipeRenderer.loadCategoriesFromServer();
 
   return false;
 };
@@ -127,11 +122,6 @@ var renderModal = function renderModal() {
         React.createElement(
           Modal.Body,
           null,
-          React.createElement(
-            DropdownButton,
-            { bsStyle: "default", title: "Categories", id: "catDropDown" },
-            cateNodes
-          ),
           React.createElement(
             FormGroup,
             { controlId: "formControlsName", id: "formName", validationState: this.state.validation },
@@ -226,6 +216,17 @@ var renderRecipe = function renderRecipe() {
           React.createElement(
             "h3",
             { className: "textIngr" },
+            "Category:",
+            React.createElement("br", null)
+          ),
+          React.createElement(
+            "p",
+            { className: "output" },
+            this.props.category
+          ),
+          React.createElement(
+            "h3",
+            { className: "textIngr" },
             "Ingredients:",
             React.createElement("br", null)
           ),
@@ -250,7 +251,7 @@ var renderRecipe = function renderRecipe() {
             { id: "listFooter" },
             React.createElement(
               Button,
-              { onClick: function onClick() {
+              { id: "editbtn", onClick: function onClick() {
                   createModal(returnKey(), '/editRecipe', 'PUT', returnData(_this.props.name, _this.props.ingredients, _this.props.notes, _this.props.category, _this.props.id));
                 } },
               " Edit"
@@ -311,18 +312,6 @@ var renderRecipeList = function renderRecipeList() {
       name: "_csrf",
       value: this.props.csrf
     }),
-    React.createElement(
-      DropdownButton,
-      { bsStyle: "default", title: "Categories", id: "sortDropDown" },
-      React.createElement(
-        MenuItem,
-        { eventKey: 0, value: "all", onClick: function onClick() {
-            getSorted('all');
-          } },
-        "All"
-      ),
-      cateNodes
-    ),
     React.createElement(
       Row,
       { className: "show-grid" },

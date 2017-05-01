@@ -3,93 +3,125 @@ let SearchYummlyClass;
 let searchRenderer;
 let searchListRenderer;
 let FieldGroup = ReactBootstrap.FieldGroup;
-let yum = {};
+let Panel = ReactBootstrap.Panel;
+let Button = ReactBootstrap.Button;
+let FormGroup = ReactBootstrap.FormGroup;
+let ControlLabel = ReactBootstrap.ControlLabel;
+let FormControl = ReactBootstrap.FormControl;
+let Row = ReactBootstrap.Row;
+let Col = ReactBootstrap.Col;
+let Modal = ReactBootstrap.Modal;
+let Glyphicon = ReactBootstrap.Glyphicon;
+let yum = [];
 
-// retrieves the json data
-const handleResponse = (xhr) => {
-    switch(xhr.status) {
-     case 200: //success
-        console.log(JSON.parse(xhr.response));
-       yum = JSON.parse(xhr.response).matches;
-       break;
-       default: //default other errors we are not handling in this example
-       break;
-    }
-};
-
-// calls the server to do a search
+// sets up info needed to do a AJAX request
 const handleSearch = (e) => {
-  console.log('post');
-  const xhr = new XMLHttpRequest();
-    const url = '/search';
-    xhr.open('post', url);
-    
-    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-      //set our requested response type in hopes of a JSON response
-    xhr.setRequestHeader('Accept', 'application/json');
-      
-    xhr.onload = () => handleResponse(xhr);
+  e.preventDefault();
+  let info = $("#searchForm").serialize();
+  let n = info.search("_csrf");
+  // slice out the key
+  let key = info.slice(n, info.length);
 
-    const formData = $("#searchForm").serialize();
-      //send our request with the data
-    xhr.send(formData);
-          
-    e.preventDefault();
-    return false;
+  // create the class using the key
+  createSearchList(key);
+
+  // then do a search request using the info
+  searchListRenderer.loadRecipesFromAPIfunction(info);
+  return false;
 };
 
+// makes a copy of the recipe and store in the database
+const copyRecipe = (name, ingredients, notes) => {
+  // get key value, not safe
+  let key = $("#cs")[0].attributes.value.value;
+  // data to send
+  let data = `name=${name}&ingredients=${ingredients}&notes=${notes}&${key}`;
+  data = data.replace(/ /g, '+');
+
+  sendAjax('POST', '/maker', data, function () {
+  });
+
+  return false;
+};
+
+// begin to render 
 const renderList = function() {
    if (this.state.data.length === 0) {
     return ( 
       <div className="searchList" >
-        <h3 className="emptySearch" > Try again!</h3> 
+        <h3 className="emptySearch"></h3> 
       </div>
     );
   }
 
+  // map out the recipes from the array, currently only about 10
+  // need to add functionality to get more 
   const recipeList = this;
-  const recipeNodes = this.yum.map(function (recipe) {
+  const recipeNodes = this.state.data.map(function (recipe) {
     return (
       <div key={recipe._id} className="recipe" >
-      <Recipe name={recipe.recipeName} id={recipe.id} ingredients={recipe.ingredients} notes={recipe.rating}/>
+      <Recipe name={recipe.recipeName} id={recipe.id} ingredients={recipe.ingredients} notes={recipe.rating} url={recipe.imageUrlsBySize[90]}/>
       </div>
     );
   });
 
-  return ( 
-    <div className="searchList" >
+  return (
+      <div className="recipeSecret" >
     <input 
       type = "hidden"
       id = "cs"
       name = "_csrf"
-      value = {this.props.csrf}
+      value = {this.state.csrf}
     /> 
+    <div className="searchList" >
       <Row className="show-grid" > {recipeNodes} </Row> 
-      </div>
+    </div>
+    </div> 
   );
 };
 
+// renders info from the recipe
+// ingredients are given as an array, so must map them out
+// button makes a copy of recipe and stores on server
 const renderRecipeSearch = function() {
  return (
    <div>
+    <Col sm={6}md={4}>
      <Panel>
       <h3 className="textName" >{this.props.name} </h3>
-        <div id="recipeCont">
+      <div id="recipeCont">
+        <br />
+        <img src={this.props.url} id="searchImg"/>
+
         <h3 className="textIngr">Ingredients:
-          <br /></h3>
-          <p className="output">{this.props.ingredients}</p> 
+        <br /></h3>
+        <div className="output">
+          {
+            this.props.ingredients.map(function(name) {
+              return <p key={name._id}>- {name}</p>;
+            })
+          }
+        </div> 
         <h3 className="textNotes" >Notes: 
-          <br /></h3><p className="output">{this.props.notes}</p>
-     <input type="hidden" name="_csrf" value={this.props.csrf}/>
-          </div>
+        <br /></h3><p className="output">Rating: {this.props.notes}</p>
+        <input type="hidden" name="_csrf" value={this.props.csrf}/>
+      </div>
+       <Modal.Footer id="listFooter">
+       <Button onClick = {
+          () => { 
+            copyRecipe(this.props.name, this.props.ingredients, this.props.notes, this.props.csrf)
+          }}><Glyphicon glyph = "copy"/> </Button>
+        </Modal.Footer>
           </Panel>
-     </div>
+     </Col>
+   </div>
   );
 };
 
+// render the search field, need to add more functionality
+// such as specific requirements for allergens and such
 const renderSearch = function() {
  return (
-   <div>
      <Panel>
      <form id="searchForm"
         onSubmit={this.handleSubmit}
@@ -99,7 +131,7 @@ const renderSearch = function() {
         className="searchForm"
       >
    <FormGroup controlId="formControlsSearch" validationState={this.state.validation} id="formS">
-      <ControlLabel>Name</ControlLabel>
+      <ControlLabel>Search</ControlLabel>
         <FormControl id="searchRec" componentClass="input" name="searchRec" value={this.state.value} placeholder={this.state.placeholder} onChange={this.handleChange}/>
     </FormGroup>
      <input type="hidden" name="_csrf" value={this.props.csrf}/>
@@ -107,37 +139,55 @@ const renderSearch = function() {
               Submit
             </Button>
      </form>
-       </Panel>
-     </div>
+    </Panel>
  );
 };
 
-const RecipeS = React.createClass({
+// set default props
+const defaultRecipeProps = function () {
+  return {
+    name: '',
+    ingredients: '',
+    notes: '',
+    key: '',
+    url: ''
+  }
+};
+
+// Recipe child of the createSearchList
+// and the props we need to render it
+const Recipe = React.createClass({
   getDefaultProps: defaultRecipeProps,
   render: renderRecipeSearch,
   propTypes: {
-    name: React.PropTypes.string.isRequired,
-    ingredients: React.PropTypes.string.isRequired,
-    notes: React.PropTypes.string.isRequired,
+    name: React.PropTypes.string,
+    ingredients: React.PropTypes.array,
+    notes: React.PropTypes.number,
+    key: React.PropTypes.string,
+    url: React.PropTypes.string
   },
 });
 
+// parent of search list
 const createSearchList = function(csrf) {
   const SearchList = React.createClass({
+     loadRecipesFromAPIfunction(info) {
+        sendAjax('POST', '/search', info, function (data) {
+        this.setState({
+          data: data.matches,
+        });
+      }.bind(this));
+    },
     getInitialState() {
     return { 
       id: '',
       ingredients: '',
       recipeName: '',
       rating: '',
-      data: {},
+      data: [],
+      csrf: csrf
     };
      },
-     loadRecipesFromAPIfunction: function() {
-        this.setState({
-          data: yum.matches,
-        });
-    },
       handleChange(e) {
     this.setState({ value: e.target.value });
     },
@@ -145,7 +195,7 @@ const createSearchList = function(csrf) {
   });
   
   searchListRenderer = ReactDOM.render(
-    <SearchWindow csrf={csrf}/>,
+    <SearchList csrf={csrf}/>,
     document.querySelector("#searchResults")
   );
 };
@@ -186,7 +236,6 @@ const createSearchWindow = function(csrf) {
 
 
 const setupSearch = function (csrf) {
-  console.log('setup');
   createSearchWindow(csrf);
 };
 
