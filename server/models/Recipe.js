@@ -9,6 +9,9 @@ const setName = (name) => _.escape(name).trim();
 const setIngr = (ingredients) => _.escape(ingredients).trim();
 const setNotes = (notes) => _.escape(notes).trim();
 const setCat = (category) => _.escape(category).trim();
+const setImg = (image) => _.escape(image).trim();
+const setWeb = (website) => _.escape(website).trim();
+
 
 const RecipeSchema = new mongoose.Schema({
   name: {
@@ -37,6 +40,18 @@ const RecipeSchema = new mongoose.Schema({
     trim: true,
     set: setCat,
   },
+  image: {
+    type: String,
+    required: false,
+    trim: true,
+    set: setImg,
+  },
+  website: {
+    type: String,
+    required: false,
+    trim: true,
+    set: setWeb,
+  },
 
   owner: {
     type: mongoose.Schema.ObjectId,
@@ -55,6 +70,8 @@ RecipeSchema.statics.toAPI = (doc) => ({
   ingredients: doc.ingredients,
   notes: doc.notes,
   category: doc.category,
+  website: doc.website,
+  image: doc.image,
 });
 
 RecipeSchema.statics.findByOwner = (ownerId, callback) => {
@@ -62,7 +79,7 @@ RecipeSchema.statics.findByOwner = (ownerId, callback) => {
     owner: convertId(ownerId),
   };
 
-  return RecipeModel.find(search).select('name ingredients notes category').exec(callback);
+  return RecipeModel.find(search).select('name ingredients notes category website image').exec(callback);
 };
 
 // by owner, check all recipes and send back the categories
@@ -80,9 +97,6 @@ RecipeSchema.statics.findRecipiesByCategories = (data, ownerId, callback) => {
     owner: convertId(ownerId),
     category: data.category,
   };
-
-  console.dir('model:');
-  console.dir(search);
 
   return RecipeModel.find(search).select('name ingredients notes category').exec(callback);
 };

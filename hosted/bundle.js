@@ -28,6 +28,8 @@ var handleRecipe = function handleRecipe() {
 
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {
     recipeRenderer.loadRecipesFromServer();
+    modalRenderer.loadCategoriesFromServer();
+    recipeRenderer.loadCategoriesFromServer();
   });
 
   return false;
@@ -65,6 +67,8 @@ var getSorted = function getSorted(category) {
   var key = $("#cs")[0].attributes.value.value;
   var data = "category=" + category + "&_csrf=" + key;
 
+  recipeRenderer.sortedCategoriesFromServer(data);
+  recipeRenderer.loadCategoriesFromServer();
   return false;
 };
 
@@ -87,10 +91,10 @@ var renderModal = function renderModal() {
   var cateNodes = this.state.data.map(function (category) {
     return React.createElement(
       MenuItem,
-      { key: category._id, eventKey: category._id, value: category.category, onClick: function onClick() {
-          recipeList.toggleChildMenu(category.category);
+      { key: category._id, eventKey: category._id, value: category, onClick: function onClick() {
+          recipeList.toggleChildMenu(category);
         } },
-      category.category
+      category
     );
   });
 
@@ -122,6 +126,11 @@ var renderModal = function renderModal() {
         React.createElement(
           Modal.Body,
           null,
+          React.createElement(
+            DropdownButton,
+            { bsStyle: "default", title: "Categories", id: "catDropDown" },
+            cateNodes
+          ),
           React.createElement(
             FormGroup,
             { controlId: "formControlsName", id: "formName", validationState: this.state.validation },
@@ -187,6 +196,7 @@ var renderRecipe = function renderRecipe() {
   var _this = this;
 
   var recipeList = this;
+
   return React.createElement(
     Col,
     { sm: 6, md: 4 },
@@ -207,6 +217,7 @@ var renderRecipe = function renderRecipe() {
         React.createElement(Glyphicon, { glyph: "chevron-down" }),
         " "
       ),
+      this.hasImage(),
       React.createElement(
         Collapse,
         { "in": recipeList.state.open },
@@ -246,6 +257,7 @@ var renderRecipe = function renderRecipe() {
             { className: "output" },
             this.props.notes
           ),
+          this.hasURL(),
           React.createElement(
             Modal.Footer,
             { id: "listFooter" },
@@ -299,7 +311,7 @@ var renderRecipeList = function renderRecipeList() {
     return React.createElement(
       "div",
       { key: recipe._id, className: "recipe" },
-      React.createElement(Recipe, { name: recipe.name, category: recipe.category, ingredients: recipe.ingredients, notes: recipe.notes, id: recipe._id })
+      React.createElement(Recipe, { name: recipe.name, category: recipe.category, ingredients: recipe.ingredients, notes: recipe.notes, id: recipe._id, img: recipe.image, site: recipe.website })
     );
   });
 
@@ -312,6 +324,18 @@ var renderRecipeList = function renderRecipeList() {
       name: "_csrf",
       value: this.props.csrf
     }),
+    React.createElement(
+      DropdownButton,
+      { bsStyle: "default", title: "Categories", id: "sortDropDown" },
+      React.createElement(
+        MenuItem,
+        { eventKey: 0, value: "all", onClick: function onClick() {
+            getSorted('all');
+          } },
+        "All"
+      ),
+      cateNodes
+    ),
     React.createElement(
       Row,
       { className: "show-grid" },
@@ -344,12 +368,8 @@ var createModal = function createModal(csrf, action, method, data) {
     // calls the database to retrieve categories
     loadCategoriesFromServer: function loadCategoriesFromServer() {
       sendAjax('GET', '/getCategories', null, function (data) {
+        console.log('modal:');
         console.dir(data);
-        var uniqueNames = data.categories.filter(function (val, id, array) {
-          return array.indexOf(val) == id;
-        });
-
-        console.dir(uniqueNames);
         this.setState({
           data: data.categories
         });
@@ -411,7 +431,9 @@ var defaultRecipeProps = function defaultRecipeProps() {
     category: '',
     ingredients: '',
     notes: '',
-    id: ''
+    id: '',
+    img: 'no img',
+    site: ''
   };
 };
 
@@ -425,13 +447,35 @@ var Recipe = React.createClass({
     category: React.PropTypes.string,
     ingredients: React.PropTypes.string,
     notes: React.PropTypes.string,
-    id: React.PropTypes.string
+    id: React.PropTypes.string,
+    site: React.PropTypes.string,
+    img: React.PropTypes.string
   },
   getInitialState: function getInitialState() {
     return {
       open: false
     };
   },
+  hasImage: function hasImage() {
+    if (this.props.img != "") {
+      return React.createElement("img", { src: this.props.img, id: "searchImg" });
+    }
+  },
+  hasURL: function hasURL() {
+    if (this.props.site != "") {
+      return React.createElement(
+        "p",
+        { className: "output" },
+        "More info: ",
+        React.createElement(
+          "a",
+          { href: this.props.site, target: "_blank" },
+          this.props.site
+        )
+      );
+    }
+  },
+
   // toggling to show/hide recipe info
   toggleChildMenu: function toggleChildMenu() {
     this.setState({ open: !this.state.open });
@@ -468,11 +512,8 @@ var setup = function setup(csrf) {
     },
     loadCategoriesFromServer: function loadCategoriesFromServer() {
       sendAjax('GET', '/getCategories', null, function (data) {
-        var uniqueNames = data.categories.filter(function (val, id, array) {
-          return array.indexOf(val) == id;
-        });
-
-        console.dir(uniqueNames);
+        console.log('list:');
+        console.dir(data);
         this.setState({
           cate: data.categories
         });
@@ -493,6 +534,7 @@ var setup = function setup(csrf) {
       };
     },
     componentDidMount: function componentDidMount() {
+      this.loadCategoriesFromServer();
       this.loadRecipesFromServer();
     },
     render: renderRecipeList

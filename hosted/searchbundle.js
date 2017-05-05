@@ -7,14 +7,18 @@ var searchListRenderer = void 0;
 var FieldGroup = ReactBootstrap.FieldGroup;
 var Panel = ReactBootstrap.Panel;
 var Button = ReactBootstrap.Button;
+var DropdownButton = ReactBootstrap.DropdownButton;
+var Checkbox = ReactBootstrap.Checkbox;
 var FormGroup = ReactBootstrap.FormGroup;
 var ControlLabel = ReactBootstrap.ControlLabel;
 var FormControl = ReactBootstrap.FormControl;
 var Row = ReactBootstrap.Row;
+var Collapse = ReactBootstrap.Collapse;
 var Col = ReactBootstrap.Col;
 var Modal = ReactBootstrap.Modal;
+
 var Glyphicon = ReactBootstrap.Glyphicon;
-var yum = [];
+var Clearfix = ReactBootstrap.Clearfix;
 
 // sets up info needed to do a AJAX request
 var handleSearch = function handleSearch(e) {
@@ -24,6 +28,7 @@ var handleSearch = function handleSearch(e) {
   // slice out the key
   var key = info.slice(n, info.length);
 
+  console.log(info);
   // create the class using the key
   createSearchList(key);
 
@@ -32,14 +37,35 @@ var handleSearch = function handleSearch(e) {
   return false;
 };
 
+var secondsToTime = function secondsToTime(secs) {
+  var hours = Math.floor(secs / (60 * 60));
+
+  var divisor_for_minutes = secs % (60 * 60);
+  var minutes = Math.floor(divisor_for_minutes / 60);
+
+  var divisor_for_seconds = divisor_for_minutes % 60;
+  var seconds = Math.ceil(divisor_for_seconds);
+
+  var obj = {
+    "h": hours,
+    "m": minutes,
+    "s": seconds
+  };
+  return obj;
+};
+
 // makes a copy of the recipe and store in the database
-var copyRecipe = function copyRecipe(name, ingredients, notes) {
+var copyRecipe = function copyRecipe(name, img, ingredients, rating, time, url) {
   // get key value, not safe
   var key = $("#cs")[0].attributes.value.value;
   // data to send
-  var data = "name=" + name + "&ingredients=" + ingredients + "&notes=" + notes + "&" + key;
+
+  var U = encodeURIComponent(url);
+  var I = encodeURIComponent(img);
+  var data = key + "&name=" + name + "&ingredients=" + ingredients + "&site=" + url + "&img=" + img + "&notes=" + rating + "+" + time;
   data = data.replace(/ /g, '+');
 
+  console.log(data);
   sendAjax('POST', '/maker', data, function () {});
 
   return false;
@@ -62,7 +88,7 @@ var renderList = function renderList() {
     return React.createElement(
       "div",
       { key: recipe._id, className: "recipe" },
-      React.createElement(Recipe, { name: recipe.recipeName, id: recipe.id, ingredients: recipe.ingredients, notes: recipe.rating, url: recipe.imageUrlsBySize[90] })
+      React.createElement(Recipe, { name: recipe.name, ingredients: recipe.ingredientLines, rating: recipe.rating, img: recipe.images[0].imageUrlsBySize[360], url: recipe.attribution.url, time: recipe.totalTime })
     );
   });
 
@@ -78,13 +104,7 @@ var renderList = function renderList() {
     React.createElement(
       "div",
       { className: "searchList" },
-      React.createElement(
-        Row,
-        { className: "show-grid" },
-        " ",
-        recipeNodes,
-        " "
-      )
+      recipeNodes
     )
   );
 };
@@ -97,24 +117,32 @@ var renderRecipeSearch = function renderRecipeSearch() {
 
   return React.createElement(
     "div",
-    null,
+    { className: "grid-item" },
     React.createElement(
-      Col,
-      { sm: 6, md: 4 },
+      Panel,
+      null,
       React.createElement(
-        Panel,
-        null,
-        React.createElement(
-          "h3",
-          { className: "textName" },
-          this.props.name,
-          " "
-        ),
+        "h3",
+        { className: "textName" },
+        this.props.name,
+        " "
+      ),
+      React.createElement("img", { src: this.props.img, id: "searchImg" }),
+      React.createElement(
+        Button,
+        { id: "showSearchBtn", onClick: function onClick() {
+            _this.toggleChildMenu();
+          } },
+        React.createElement(Glyphicon, { glyph: "chevron-down" }),
+        " "
+      ),
+      React.createElement(
+        Collapse,
+        { "in": this.state.open },
         React.createElement(
           "div",
           { id: "recipeCont" },
           React.createElement("br", null),
-          React.createElement("img", { src: this.props.url, id: "searchImg" }),
           React.createElement(
             "h3",
             { className: "textIngr" },
@@ -143,21 +171,37 @@ var renderRecipeSearch = function renderRecipeSearch() {
             "p",
             { className: "output" },
             "Rating: ",
-            this.props.notes
+            this.props.rating
+          ),
+          React.createElement(
+            "p",
+            { className: "output" },
+            "Total Time: ",
+            this.props.time
+          ),
+          React.createElement(
+            "p",
+            { className: "output" },
+            "More info: ",
+            React.createElement(
+              "a",
+              { href: this.props.url, target: "_blank" },
+              this.props.url
+            )
           ),
           React.createElement("input", { type: "hidden", name: "_csrf", value: this.props.csrf })
-        ),
+        )
+      ),
+      React.createElement(
+        Modal.Footer,
+        { id: "listFooter" },
         React.createElement(
-          Modal.Footer,
-          { id: "listFooter" },
-          React.createElement(
-            Button,
-            { onClick: function onClick() {
-                copyRecipe(_this.props.name, _this.props.ingredients, _this.props.notes, _this.props.csrf);
-              } },
-            React.createElement(Glyphicon, { glyph: "copy" }),
-            " "
-          )
+          Button,
+          { onClick: function onClick() {
+              copyRecipe(_this.props.name, _this.props.img, _this.props.ingredients, _this.props.rating, _this.props.time, _this.props.url);
+            } },
+          React.createElement(Glyphicon, { glyph: "copy" }),
+          " "
         )
       )
     )
@@ -187,7 +231,226 @@ var renderSearch = function renderSearch() {
           null,
           "Search"
         ),
-        React.createElement(FormControl, { id: "searchRec", componentClass: "input", name: "searchRec", value: this.state.value, placeholder: this.state.placeholder, onChange: this.handleChange })
+        React.createElement(FormControl, { id: "searchRec", componentClass: "input", name: "searchRec", value: this.state.value, placeholder: this.state.placeholder, onChange: this.handleChange }),
+        React.createElement(
+          DropdownButton,
+          { bsStyle: "default", name: "diet", title: "Diets", id: "dietsDropDown" },
+          React.createElement(
+            "div",
+            { id: "dietHolder" },
+            React.createElement(
+              Checkbox,
+              { value: "Pescetarian", name: "diet" },
+              "Pescetarian"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Vegan", name: "diet" },
+              "Vegan"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Vegetarian", name: "diet" },
+              "Vegetarian"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Lacto Vegetarian", name: "diet" },
+              "Lacto vegetarian"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Ovo Vegetarian", name: "diet" },
+              "Ovo vegetarian"
+            )
+          )
+        ),
+        React.createElement(
+          DropdownButton,
+          { bsStyle: "default", name: "allergy", title: "Allergies", id: "allergiesDropDown" },
+          React.createElement(
+            "div",
+            { id: "allergyHolder" },
+            React.createElement(
+              Checkbox,
+              { value: "dairy", name: "allergy" },
+              "Dairy"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "egg", name: "allergy" },
+              "Egg"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "gluten", name: "allergy" },
+              "Gluten"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "peanut", name: "allergy" },
+              "Peanut"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "seafood", name: "allergy" },
+              "Seafood"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "sesame", name: "allergy" },
+              "Sesame"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "soy", name: "allergy" },
+              "Soy"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "sulfite", name: "allergy" },
+              "Sulfite"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "tree nut", name: "allergy" },
+              "Tree Nut"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "wheat", name: "allergy" },
+              "Wheat"
+            )
+          )
+        ),
+        React.createElement(
+          DropdownButton,
+          { bsStyle: "default", name: "cuisine", title: "Cuisine", id: "cuisineDropDown" },
+          React.createElement(
+            "div",
+            { id: "cuisineHolder" },
+            React.createElement(
+              Checkbox,
+              { value: "American", name: "cuisine" },
+              "American"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Italian", name: "cuisine" },
+              "Italian"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Asian", name: "cuisine" },
+              "Asian"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Mexican", name: "cuisine" },
+              "Mexican"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Southern & Soul Food", name: "cuisine" },
+              "Southern & Soul Food"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "French", name: "cuisine" },
+              "French"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Southwestern", name: "cuisine" },
+              "Southwestern"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Barbecue", name: "cuisine" },
+              "Barbecue"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Indian", name: "cuisine" },
+              "Indian"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Chinese", name: "cuisine" },
+              "Chinese"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Cajun & Creole", name: "cuisine" },
+              "Cajun & Creole"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "English", name: "cuisine" },
+              "English"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Mediterranean", name: "cuisine" },
+              "Mediterranean"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Greek", name: "cuisine" },
+              "Greek"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Spanish", name: "cuisine" },
+              "Spanish"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "German", name: "cuisine" },
+              "German"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Thai", name: "cuisine" },
+              "Thai"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Irish", name: "cuisine" },
+              "Irish"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Japanese", name: "cuisine" },
+              "Japanese"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Cuban", name: "cuisine" },
+              "Cuban"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Hawaiin", name: "cuisine" },
+              "Hawaiin"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Swedish", name: "cuisine" },
+              "Swedish"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Hungarian", name: "cuisine" },
+              "Hungarian"
+            ),
+            React.createElement(
+              Checkbox,
+              { value: "Portugese", name: "cuisine" },
+              "Portugese"
+            )
+          )
+        )
       ),
       React.createElement("input", { type: "hidden", name: "_csrf", value: this.props.csrf }),
       React.createElement(
@@ -204,9 +467,11 @@ var defaultRecipeProps = function defaultRecipeProps() {
   return {
     name: '',
     ingredients: '',
-    notes: '',
+    rating: '',
     key: '',
-    url: ''
+    url: '',
+    img: '',
+    time: ''
   };
 };
 
@@ -220,9 +485,20 @@ var Recipe = React.createClass({
   propTypes: {
     name: React.PropTypes.string,
     ingredients: React.PropTypes.array,
-    notes: React.PropTypes.number,
+    rating: React.PropTypes.number,
     key: React.PropTypes.string,
-    url: React.PropTypes.string
+    url: React.PropTypes.string,
+    img: React.PropTypes.string,
+    time: React.PropTypes.string
+  },
+  getInitialState: function getInitialState() {
+    return {
+      open: false
+    };
+  },
+  // toggling to show/hide recipe info
+  toggleChildMenu: function toggleChildMenu() {
+    this.setState({ open: !this.state.open });
   }
 });
 
@@ -232,8 +508,9 @@ var createSearchList = function createSearchList(csrf) {
     displayName: "SearchList",
     loadRecipesFromAPIfunction: function loadRecipesFromAPIfunction(info) {
       sendAjax('POST', '/search', info, function (data) {
+        console.dir(data);
         this.setState({
-          data: data.matches
+          data: data
         });
       }.bind(this));
     },
@@ -269,14 +546,8 @@ var createSearchWindow = function createSearchWindow(csrf) {
     },
     handleSubmit: function handleSubmit(e) {
       e.preventDefault();
-      var length = this.state.value.length;
-      if (length === 0) {
-        this.setState({ validation: 'error' });
-        this.setState({ placeholder: 'Please, give me a name!' });
-      } else {
-        this.setState({ showModal: false });
-        handleSearch(e);
-      }
+      this.setState({ showModal: false });
+      handleSearch(e);
     },
     handleChange: function handleChange(e) {
       this.setState({ value: e.target.value });

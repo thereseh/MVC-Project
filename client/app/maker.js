@@ -24,10 +24,13 @@ const handleRecipe = () => {
   
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {    
     recipeRenderer.loadRecipesFromServer();
+    modalRenderer.loadCategoriesFromServer();
+    recipeRenderer.loadCategoriesFromServer();
   });
 
   return false;
 };
+
 
 /* Removes a recipe from the database */
 const removeRecipe = (id) => {
@@ -62,6 +65,8 @@ const getSorted = (category) =>  {
   let key = $("#cs")[0].attributes.value.value;
   let data = `category=${category}&_csrf=${key}`;
   
+  recipeRenderer.sortedCategoriesFromServer(data);
+  recipeRenderer.loadCategoriesFromServer();
   return false;
 };
 
@@ -81,7 +86,7 @@ const renderModal = function () {
   // first populate the category dropdown with categries from array in states
    const cateNodes = this.state.data.map(function (category) {
     return (
-      <MenuItem key={category._id} eventKey={category._id} value={category.category} onClick={ ()=> {recipeList.toggleChildMenu(category.category)}}>{category.category}</MenuItem>
+      <MenuItem key={category._id} eventKey={category._id} value={category} onClick={ ()=> {recipeList.toggleChildMenu(category)}}>{category}</MenuItem>
     );
   });
   
@@ -100,6 +105,9 @@ const renderModal = function () {
           <Modal.Title>Add Recipe</Modal.Title>
           </Modal.Header>
           <Modal.Body>
+            <DropdownButton bsStyle="default" title="Categories" id="catDropDown">
+          {cateNodes}
+          </DropdownButton>
            <FormGroup controlId="formControlsName" id="formName"  validationState={this.state.validation}>
     
             <ControlLabel>Name</ControlLabel>
@@ -140,11 +148,14 @@ const renderModal = function () {
 // renders the child list of recipes retrieved from database using props from parent
 const renderRecipe = function() {
     const recipeList = this;
+
   return (
       <Col sm={6}md={4}>
       <Well>
         <h3 className="textName" >{this.props.name} </h3>
+        
         <Button id="showBtn"onClick={ ()=> {recipeList.toggleChildMenu()}}><Glyphicon glyph="chevron-down"/> </Button>
+        { this.hasImage() }
         <Collapse in={recipeList.state.open}>
         <div id="recipeCont">
           <h3 className="textIngr">Category:
@@ -153,6 +164,7 @@ const renderRecipe = function() {
           <br /></h3><p className="output">{this.props.ingredients}</p> 
         <h3 className="textNotes" >Notes: 
           <br /></h3><p className="output">{this.props.notes}</p>
+          { this.hasURL() }
         <Modal.Footer id="listFooter">
            <Button id="editbtn" onClick = {
           () => { 
@@ -189,7 +201,7 @@ const renderRecipeList = function () {
   const recipeNodes = this.state.data.map(function (recipe) {
     return (
       <div key={recipe._id} className="recipe">
-      <Recipe name={recipe.name} category={recipe.category} ingredients={recipe.ingredients} notes={recipe.notes} id={recipe._id}/>
+      <Recipe name={recipe.name} category={recipe.category} ingredients={recipe.ingredients} notes={recipe.notes} id={recipe._id} img={recipe.image} site={recipe.website} />
       </div>
     );
   });
@@ -202,6 +214,10 @@ const renderRecipeList = function () {
       name = "_csrf"
       value = {this.props.csrf}
     /> 
+       <DropdownButton bsStyle="default" title="Categories" id="sortDropDown">
+        <MenuItem eventKey={0} value='all' onClick={ ()=> {getSorted('all')}}>All</MenuItem>
+          {cateNodes}
+      </DropdownButton>
       <Row className="show-grid" > {recipeNodes} </Row> 
       </div>
   );
@@ -228,11 +244,8 @@ const createModal = function(csrf, action, method, data) {
     // calls the database to retrieve categories
     loadCategoriesFromServer: function () {
       sendAjax('GET', '/getCategories', null, function (data) {
+        console.log('modal:')
         console.dir(data);
-        const uniqueNames = data.categories.filter((val,id,array) => array.indexOf(val) == id);
-
-        
-        console.dir(uniqueNames);
         this.setState({
           data: data.categories,
         });
@@ -293,7 +306,9 @@ const defaultRecipeProps = function () {
     category: '',
     ingredients: '',
     notes: '',
-    id: ''
+    id: '',
+    img: 'no img',
+    site: ''
   }
 };
 
@@ -306,12 +321,29 @@ const Recipe = React.createClass({
     ingredients: React.PropTypes.string,
     notes: React.PropTypes.string,
     id: React.PropTypes.string,
+    site: React.PropTypes.string,
+    img: React.PropTypes.string,
   },
   getInitialState: function () {
       return {
         open: false,
       };
     },
+  hasImage(){
+    if (this.props.img != "") {
+      return (
+        <img src={this.props.img} id="searchImg"/>
+      );
+    }
+  },
+  hasURL(){
+    if (this.props.site != "") {
+      return (
+        <p className="output">More info: <a href={this.props.site} target="_blank">
+          {this.props.site}</a></p>
+      );
+    }
+  },
   // toggling to show/hide recipe info
    toggleChildMenu() {
       this.setState({open: !this.state.open});
@@ -346,10 +378,8 @@ const setup = function (csrf) {
     },
     loadCategoriesFromServer: function () {
       sendAjax('GET', '/getCategories', null, function (data) {
-         const uniqueNames = data.categories.filter((val,id,array) => array.indexOf(val) == id);
-
-        
-        console.dir(uniqueNames);
+        console.log('list:')
+        console.dir(data);
         this.setState({
           cate: data.categories,
         });
@@ -370,6 +400,7 @@ const setup = function (csrf) {
       };
     },
     componentDidMount: function () {
+      this.loadCategoriesFromServer();
       this.loadRecipesFromServer();
     },
     render: renderRecipeList

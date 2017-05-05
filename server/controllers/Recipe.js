@@ -52,10 +52,13 @@ const makeRecipe = (req, res) => {
     name: req.body.name,
     ingredients: req.body.ingredients,
     category: req.body.category,
+    website: req.body.site,
+    image: req.body.img,
     notes: req.body.notes,
     owner: req.session.account._id,
   };
 
+  console.dir(recipeData);
   const newRecipe = new Recipe.RecipeModel(recipeData);
 
   const recipePromise = newRecipe.save();
