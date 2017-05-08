@@ -64,12 +64,15 @@ var returnData = function returnData(name, ingredients, notes, category, id) {
 };
 
 var getSorted = function getSorted(category) {
-  var key = $("#cs")[0].attributes.value.value;
-  var data = "category=" + category + "&_csrf=" + key;
+  if (category === "all") {
+    recipeRenderer.loadRecipesFromServer();
+  } else {
+    var key = $("#cs")[0].attributes.value.value;
+    var data = "category=" + category + "&_csrf=" + key;
 
-  recipeRenderer.sortedCategoriesFromServer(data);
-  recipeRenderer.loadCategoriesFromServer();
-  return false;
+    recipeRenderer.sortedCategoriesFromServer(data);
+    recipeRenderer.loadCategoriesFromServer();
+  }
 };
 
 var editRecipe = function editRecipe(id) {
@@ -196,12 +199,11 @@ var renderRecipe = function renderRecipe() {
   var _this = this;
 
   var recipeList = this;
-
   return React.createElement(
-    Col,
-    { sm: 6, md: 4 },
+    "div",
+    { className: "grid-item" },
     React.createElement(
-      Well,
+      Panel,
       null,
       React.createElement(
         "h3",
@@ -298,13 +300,13 @@ var renderRecipeList = function renderRecipeList() {
   }
 
   var recipeList = this;
-  var cateNodes = this.state.data.map(function (category) {
+  var cate2Nodes = this.state.cate.map(function (category) {
     return React.createElement(
       MenuItem,
-      { key: category._id, eventKey: category._id, value: category.category, onClick: function onClick() {
-          getSorted(category.category);
+      { key: category._id, eventKey: category._id, value: category, onClick: function onClick() {
+          getSorted(category);
         } },
-      category.category
+      category
     );
   });
   var recipeNodes = this.state.data.map(function (recipe) {
@@ -334,14 +336,12 @@ var renderRecipeList = function renderRecipeList() {
           } },
         "All"
       ),
-      cateNodes
+      cate2Nodes
     ),
     React.createElement(
-      Row,
-      { className: "show-grid" },
-      " ",
-      recipeNodes,
-      " "
+      "div",
+      { className: "searchList" },
+      recipeNodes
     )
   );
 };

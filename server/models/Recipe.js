@@ -100,7 +100,9 @@ RecipeSchema.statics.findRecipiesByCategories = (data, ownerId, callback) => {
     category: data.category,
   };
 
-  return RecipeModel.find(search).select('name ingredients notes category').exec(callback);
+  return RecipeModel.find(search)
+    .select('name ingredients notes category website image')
+    .exec(callback);
 };
 
 // finds a specific domo and removes it

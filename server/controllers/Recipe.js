@@ -58,7 +58,6 @@ const makeRecipe = (req, res) => {
     owner: req.session.account._id,
   };
 
-  console.dir(recipeData);
   const newRecipe = new Recipe.RecipeModel(recipeData);
 
   const recipePromise = newRecipe.save();
@@ -85,8 +84,7 @@ const getSorted = (request, response) => {
   const data = {
     category: req.body.category,
   };
-  console.dir('controllrs:');
-  console.dir(data);
+
   return Recipe.RecipeModel.findRecipiesByCategories(data, req.session.account._id, (err, docs) => {
     if (err) {
       console.log(err);
@@ -108,7 +106,6 @@ const getRecipes = (request, response) => {
       console.log(err);
       return res.status(400).json({ error: 'An error occurred' });
     }
-
     return res.json({ recipes: docs });
   });
 };
@@ -123,8 +120,10 @@ const getCategories = (request, response) => {
       console.log(err);
       return res.status(400).json({ error: 'An error occurred' });
     }
-
-    return res.json({ categories: docs });
+    const empty = docs.indexOf(' ');
+    const docs2 = docs.splice(empty, 1);
+    console.dir(docs2);
+    return res.json({ categories: docs2 });
   });
 };
 

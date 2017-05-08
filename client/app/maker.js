@@ -62,12 +62,15 @@ const returnData = (name, ingredients, notes, category, id) => {
 };
 
 const getSorted = (category) =>  {
-  let key = $("#cs")[0].attributes.value.value;
-  let data = `category=${category}&_csrf=${key}`;
+  if (category === "all") {
+    recipeRenderer.loadRecipesFromServer();
+  } else {
+    let key = $("#cs")[0].attributes.value.value;
+    let data = `category=${category}&_csrf=${key}`;
   
-  recipeRenderer.sortedCategoriesFromServer(data);
-  recipeRenderer.loadCategoriesFromServer();
-  return false;
+    recipeRenderer.sortedCategoriesFromServer(data);
+    recipeRenderer.loadCategoriesFromServer();
+  }
 };
 
 const editRecipe = (id) => {
@@ -147,11 +150,10 @@ const renderModal = function () {
 
 // renders the child list of recipes retrieved from database using props from parent
 const renderRecipe = function() {
-    const recipeList = this;
-
+  const recipeList = this;
   return (
-      <Col sm={6}md={4}>
-      <Well>
+    <div className="grid-item">
+     <Panel>
         <h3 className="textName" >{this.props.name} </h3>
         
         <Button id="showBtn"onClick={ ()=> {recipeList.toggleChildMenu()}}><Glyphicon glyph="chevron-down"/> </Button>
@@ -177,8 +179,8 @@ const renderRecipe = function() {
         </Modal.Footer>
           </div>
        </Collapse>
-      </Well> 
-      </Col> 
+       </Panel>
+     </div>
   )
 };
 
@@ -193,9 +195,9 @@ const renderRecipeList = function () {
   }
 
   const recipeList = this;
-   const cateNodes = this.state.data.map(function (category) {
+   const cate2Nodes = this.state.cate.map(function (category) {
     return (
-      <MenuItem key={category._id} eventKey={category._id} value={category.category} onClick={ ()=> {getSorted(category.category)}}>{category.category}</MenuItem>
+      <MenuItem key={category._id} eventKey={category._id} value={category} onClick={ ()=> {getSorted(category)}}>{category}</MenuItem>
     );
   });
   const recipeNodes = this.state.data.map(function (recipe) {
@@ -216,12 +218,13 @@ const renderRecipeList = function () {
     /> 
        <DropdownButton bsStyle="default" title="Categories" id="sortDropDown">
         <MenuItem eventKey={0} value='all' onClick={ ()=> {getSorted('all')}}>All</MenuItem>
-          {cateNodes}
+          {cate2Nodes}
       </DropdownButton>
-      <Row className="show-grid" > {recipeNodes} </Row> 
+         <div className="searchList" >
+          {recipeNodes}
       </div>
+      </div> 
   );
-  
 };
 
 const createModal = function(csrf, action, method, data) {

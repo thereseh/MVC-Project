@@ -21,7 +21,6 @@ const respondJSON = (request, response, status, object) => {
   const headers = {
     'Content-Type': 'application/json',
   };
-  console.log(`respondJSON ${request}`);
   response.writeHead(status, headers);
   response.write(JSON.stringify(object));
   response.end();
@@ -41,10 +40,10 @@ const searchYummly = (req, res) => {
   let diets = '';
   let allergy = '';
   let cuisine = '';
-  let search = '';
+  // let search = '';
   if (req.body.searchRec === '') {
     console.log('empty');
-    search = '';
+    // search = '';
   }
   if (req.body.diet) {
     diets = req.body.diet;
@@ -59,12 +58,11 @@ const searchYummly = (req, res) => {
   console.log(cuisine);
   console.log(diets);
   console.log(allergy);
-  Yummly.query(search)
+  Yummly.query('pasta')
     .maxResults(20)
     .paginate(10)
-    .allowedDiets(diets)
-    .allowedAllergies(allergy)
-    .allowedCuisines(cuisine)
+    .allowedDiets('Vegan')
+    .allowedAllergies('gluten')
     .requirePictures(true)
     .get()
     .then((resp) => {
@@ -80,6 +78,9 @@ const searchYummly = (req, res) => {
         });
         respondJSON(req, res, 200, recipestwo);
       });
+    })
+    .then((err) => {
+      console.dir(err);
     });
 
   return false;
