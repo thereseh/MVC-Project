@@ -79,7 +79,9 @@ RecipeSchema.statics.findByOwner = (ownerId, callback) => {
     owner: convertId(ownerId),
   };
 
-  return RecipeModel.find(search).select('name ingredients notes category website image').exec(callback);
+  return RecipeModel.find(search)
+    .select('name ingredients notes category website image')
+    .exec(callback);
 };
 
 // by owner, check all recipes and send back the categories
