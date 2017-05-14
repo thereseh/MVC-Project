@@ -122,7 +122,6 @@ const getCategories = (request, response) => {
     }
     const empty = docs.indexOf(' ');
     const docs2 = docs.splice(empty, 1);
-    console.dir(docs2);
     return res.json({ categories: docs2 });
   });
 };

@@ -85,7 +85,7 @@ const renderList = function() {
   const recipeList = this;
   const recipeNodes = this.state.data.map(function (recipe) {
     return (
-      <div key={recipe._id} className="recipe" >
+      <div key={recipe.id} className="recipe" >
       <Recipe name={recipe.name} ingredients={recipe.ingredientLines} rating={recipe.rating} img={recipe.images[0].imageUrlsBySize[360]} url={recipe.attribution.url} time={recipe.totalTime}/>
       </div>
     );

@@ -87,7 +87,7 @@ var renderList = function renderList() {
   var recipeNodes = this.state.data.map(function (recipe) {
     return React.createElement(
       "div",
-      { key: recipe._id, className: "recipe" },
+      { key: recipe.id, className: "recipe" },
       React.createElement(Recipe, { name: recipe.name, ingredients: recipe.ingredientLines, rating: recipe.rating, img: recipe.images[0].imageUrlsBySize[360], url: recipe.attribution.url, time: recipe.totalTime })
     );
   });

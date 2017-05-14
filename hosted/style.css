@@ -19,17 +19,36 @@ html, body {
 }
 
 nav {
-    width: 100%;
-    height: 50px;
-    background-color: orange;
-    display: inline-block;
-
+ width: 100%;
+ height: 65px;
+ background-color: white;
+ box-shadow: 1px 1px 2px #888888;
 }
 
-nav:nth-child(1) {
-    padding-left: 25px;
+.navlink > a{
+  padding-left: 25px;
+  color: #737373;
 }
 
+#title {
+  margin: 0 auto;
+  float: left;
+  margin-top: -4px;
+  font-size: 25px;
+  color: orange;
+  margin-right: 30px;
+}
+
+a:focus, a:hover {
+  color: orange;
+}
+
+.navlink {
+  padding: 20px 30px 20px 30px;
+  width: 100%;
+  height: 100%;
+}
+/*
 .navlink {
     padding: 5px;
     padding-top: 12px;
@@ -38,6 +57,48 @@ nav:nth-child(1) {
     display: inline-block;
     font-size: 1.3em;
     float: left;
+}
+
+.navlink a, .navlink a:link, .navlink a:visited, .navlink a:hover, .navlink a:active {
+    color: white;
+    text-decoration: none;
+    padding: 5px;
+    margin-right: 20px;
+    float: left;
+    border-radius: 4px;
+    color: white;
+    transition: color 0.4s ease;
+}
+
+.navlink a:hover {
+    transition: background-color 0.8s ease;
+    color: black;
+}*/
+
+#accountBtn {
+  margin-top: -10px;
+  float: right;
+}
+
+.nav>li>a {
+  color: #737373;
+}
+
+.nav>li>a:focus, .nav>li>a:hover {
+  background-color: white;
+}
+
+#accountDrop>li>a:focus, .dropdown-menu>li>a:hover {
+  background-color: orange;
+  color: white;
+}
+
+#accountDrop {
+  left: -40px;
+  padding: 10px 0 10px 0;
+}
+
+.nav .open>a, .nav .open>a:focus, .nav .open>a:hover {   background-color: white;
 }
 #editbtn {
   padding: 3.5px 10px; 
@@ -58,35 +119,35 @@ nav:nth-child(1) {
 }
 
 #searchResults {
-  margin: 40px;
+  margin: 35px;
 }
 #sBtn {
   float: right;
 }
 
 .panel {
-  width: 100%;
   margin-bottom: 0;
   position: relative;
-  min-width: 383px;
+  width: 280px;
 }
 
 
 .searchList {
-  -webkit-column-count: 3;
-  -webkit-column-gap: 10px;
+  width: 100%;
+  -webkit-column-count: 4;
+  -webkit-column-gap: 5px;
   -webkit-column-fill: auto;
-  -moz-column-count: 3;
-  -moz-column-gap: 10px;
+  -moz-column-count: 4;
+  -moz-column-gap: 5px;
   -moz-column-fill: auto;
-  column-count: 3;
-  column-gap: 10px;
+  column-count: 4;
+  column-gap: 5px;
   column-fill: auto;
 }
 
 .grid-item {
   display: inline-block;
-  margin: 10px 10px 10px 10px;
+  margin: 5px 5px 5px 5px;
   -webkit-column-break-inside: avoid;
   column-break-inside: avoid;
   opacity: 1;
@@ -106,8 +167,6 @@ nav:nth-child(1) {
   margin-top: 10px;
   margin-right: 10px;
 }
-
-
 
 #dietHolder, #allergyHolder, #cuisineHolder {
   margin-left: 10px;
@@ -151,6 +210,11 @@ nav:nth-child(1) {
   width: 100%;
 }
 
+.recipe {
+  width: 280px;
+  margin: 0 auto;
+}
+
 #recipes {
   margin: 10px 10px 10px 10px;
 }
@@ -177,23 +241,12 @@ nav:nth-child(1) {
   height: auto;
 }
 
-#errMsg {
+.emptyRecipe {
+  align-content: center;
   text-align: center;
 }
 
-.navlink a, .navlink a:link, .navlink a:visited, .navlink a:hover, .navlink a:active {
-    color: white;
-    text-decoration: none;
-    padding: 5px;
-    margin-right: 20px;
-    float: left;
-    border-radius: 4px;
-    color: white;
-    transition: color 0.4s ease;
-}
-
-.navlink a:hover {
-    transition: background-color 0.8s ease;
-    color: black;
+#errMsg {
+  text-align: center;
 }
 

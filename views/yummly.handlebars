@@ -3,13 +3,28 @@
   <meta charset="utf-8"/>
   <title>Search</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.30.9/react-bootstrap.min.js"></script>
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
   <link rel="shortcut icon" href="/assets/img/favicon.png"/>
   <link rel="stylesheet" type="text/css" href="/assets/style.css"/>
 </head>
 <body>
-  <nav><a href="/login"></a>
-    <div class="navlink"><a href="/logout">Log out</a><a href="/maker" style="display: none" id="addRecipe"></a><a href="/maker">Recipe Book</a></div>
+  <nav>
+    <div class="navlink">
+    <h3 id="title">Recipe Book</h3>
+    <a href="/maker" style="display: none" id="addRecipe"></a><a href="/maker">Recipe Book</a>
+    <ul class="nav nav-pills" id="accountBtn">
+    <li role="presentation" class="dropdown">
+    <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+      Your Account <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu" id="accountDrop">
+      <li><a href="/updatePage" id="updatePassword">Change Password</a></li>
+      <li><a href="/logout">Log out</a></li>
+    </ul>   
+  </li>
+</ul>
+  </div>
   </nav>
   <section id="searchPanel">
   </section>

@@ -25,11 +25,10 @@ var DropdownButton = ReactBootstrap.DropdownButton;
 
 // loads recipes and categories from database
 var handleRecipe = function handleRecipe() {
-
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {
     recipeRenderer.loadRecipesFromServer();
-    modalRenderer.loadCategoriesFromServer();
     recipeRenderer.loadCategoriesFromServer();
+    modalRenderer.loadCategoriesFromServer();
   });
 
   return false;
@@ -52,6 +51,7 @@ var removeRecipe = function removeRecipe(id) {
 var returnKey = function returnKey() {
   return $("#cs")[0].attributes.value.value;
 };
+
 var returnData = function returnData(name, ingredients, notes, category, id) {
   var data = {
     name: name,
@@ -63,18 +63,20 @@ var returnData = function returnData(name, ingredients, notes, category, id) {
   return data;
 };
 
+// puts together data needed to do a request for recipes
+// of a certain category
 var getSorted = function getSorted(category) {
   if (category === "all") {
     recipeRenderer.loadRecipesFromServer();
   } else {
     var key = $("#cs")[0].attributes.value.value;
     var data = "category=" + category + "&_csrf=" + key;
-
     recipeRenderer.sortedCategoriesFromServer(data);
     recipeRenderer.loadCategoriesFromServer();
   }
 };
 
+// puts together data needed to do a put request to update recipe
 var editRecipe = function editRecipe(id) {
   var data = "id=" + id + "&" + $("#modalRenderer").serialize();
   sendAjax('PUT', $("#modalRenderer").attr("action"), data, function () {
@@ -91,10 +93,10 @@ var renderModal = function renderModal() {
 
   var recipeList = this;
   // first populate the category dropdown with categries from array in states
-  var cateNodes = this.state.data.map(function (category) {
+  var cateNodes = this.state.data.map(function (category, i) {
     return React.createElement(
       MenuItem,
-      { key: category._id, eventKey: category._id, value: category, onClick: function onClick() {
+      { key: i, eventKey: category._id, value: category, onClick: function onClick() {
           recipeList.toggleChildMenu(category);
         } },
       category
@@ -243,11 +245,14 @@ var renderRecipe = function renderRecipe() {
             "Ingredients:",
             React.createElement("br", null)
           ),
-          React.createElement(
-            "p",
-            { className: "output" },
-            this.props.ingredients
-          ),
+          this.state.noteLines.map(function (name, i) {
+            return React.createElement(
+              "p",
+              { key: i },
+              "- ",
+              name
+            );
+          }),
           React.createElement(
             "h3",
             { className: "textNotes" },
@@ -257,9 +262,8 @@ var renderRecipe = function renderRecipe() {
           React.createElement(
             "p",
             { className: "output" },
-            this.props.notes
+            this.hasURL()
           ),
-          this.hasURL(),
           React.createElement(
             Modal.Footer,
             { id: "listFooter" },
@@ -285,6 +289,7 @@ var renderRecipe = function renderRecipe() {
   );
 };
 
+/* ====== RENDERS THE LIST OF CHILD RECIPES ======= */
 // renders instances of recipes
 var renderRecipeList = function renderRecipeList() {
   if (this.state.data.length === 0) {
@@ -294,26 +299,26 @@ var renderRecipeList = function renderRecipeList() {
       React.createElement(
         "h3",
         { className: "emptyRecipe" },
-        " No recipes yet"
+        "No recipes yet"
       )
     );
   }
 
   var recipeList = this;
-  var cate2Nodes = this.state.cate.map(function (category) {
+  var cate2Nodes = this.state.cate.map(function (category, i) {
     return React.createElement(
       MenuItem,
-      { key: category._id, eventKey: category._id, value: category, onClick: function onClick() {
+      { key: i, eventKey: category._id, value: category, onClick: function onClick() {
           getSorted(category);
         } },
       category
     );
   });
-  var recipeNodes = this.state.data.map(function (recipe) {
+  var recipeNodes = this.state.data.map(function (recipe, i) {
     return React.createElement(
       "div",
-      { key: recipe._id, className: "recipe" },
-      React.createElement(Recipe, { name: recipe.name, category: recipe.category, ingredients: recipe.ingredients, notes: recipe.notes, id: recipe._id, img: recipe.image, site: recipe.website })
+      { key: i, className: "recipe" },
+      React.createElement(Recipe, { name: recipe.name, category: recipe.category, ingredients: recipe.ingredients, notes: recipe.notes, id: recipe._id, img: recipe.image, site: recipe.website, key: i })
     );
   });
 
@@ -328,7 +333,7 @@ var renderRecipeList = function renderRecipeList() {
     }),
     React.createElement(
       DropdownButton,
-      { bsStyle: "default", title: "Categories", id: "sortDropDown" },
+      { bsStyle: "default", title: "Sort by Categories", id: "sortDropDown" },
       React.createElement(
         MenuItem,
         { eventKey: 0, value: "all", onClick: function onClick() {
@@ -346,6 +351,7 @@ var renderRecipeList = function renderRecipeList() {
   );
 };
 
+/* ====== CREATES THE MODAL ======= */
 var createModal = function createModal(csrf, action, method, data) {
   AddNewRecipeClass = React.createClass({
     displayName: "AddNewRecipeClass",
@@ -424,6 +430,7 @@ var createModal = function createModal(csrf, action, method, data) {
   modalRenderer = ReactDOM.render(React.createElement(AddNewRecipeClass, { csrf: csrf }), document.querySelector("#content"));
 };
 
+/* ====== CHILD RECIPE CLASS ======= */
 var defaultRecipeProps = function defaultRecipeProps() {
   return {
     open: false,
@@ -453,7 +460,8 @@ var Recipe = React.createClass({
   },
   getInitialState: function getInitialState() {
     return {
-      open: false
+      open: false,
+      noteLines: []
     };
   },
   hasImage: function hasImage() {
@@ -475,10 +483,24 @@ var Recipe = React.createClass({
       );
     }
   },
+  parseText: function parseText() {
+    var lines = [];
+    console.dir(this.props.ingredients);
+    var split = this.props.ingredients.split(/[\n,]/);
+    for (var i = 0; i < split.length; i++) {
+      if (split[i]) lines.push(split[i].trim());
+    }
+    console.log(lines);
+    this.setState({ noteLines: lines });
+  },
 
   // toggling to show/hide recipe info
   toggleChildMenu: function toggleChildMenu() {
     this.setState({ open: !this.state.open });
+  },
+
+  componentDidMount: function componentDidMount() {
+    this.parseText();
   }
 });
 
@@ -504,21 +526,20 @@ var setup = function setup(csrf) {
 
     loadRecipesFromServer: function loadRecipesFromServer() {
       sendAjax('GET', '/getRecipes', null, function (data) {
-        console.dir(data);
         this.setState({
           data: data.recipes
         });
       }.bind(this));
     },
+    // loads all (unique) categories from the server
     loadCategoriesFromServer: function loadCategoriesFromServer() {
       sendAjax('GET', '/getCategories', null, function (data) {
-        console.log('list:');
-        console.dir(data);
         this.setState({
           cate: data.categories
         });
       }.bind(this));
     },
+    // get recipes of specific category
     sortedCategoriesFromServer: function sortedCategoriesFromServer(info) {
       sendAjax('PUT', '/getSorted', info, function (data) {
         this.setState({

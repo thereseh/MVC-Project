@@ -6,6 +6,10 @@ const loginPage = (req, res) => {
   res.render('login', { csrfToken: req.csrfToken() });
 };
 
+const updatePage = (req, res) => {
+  res.render('change', { csrfToken: req.csrfToken() });
+};
+
 const logout = (req, res) => {
   req.session.destroy();
   res.redirect('/');
@@ -77,6 +81,46 @@ const signup = (request, response) => {
   });
 };
 
+const updatePassword = (request, response) => {
+  const req = request;
+  const res = response;
+
+  if (!req.body.username || !req.body.pass || !req.body.pass2) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  const username = `${req.body.username}`;
+  const password = `${req.body.pass}`;
+
+
+  req.body.pass = `${req.body.pass}`;
+  req.body.pass2 = `${req.body.pass2}`;
+
+  return Account.AccountModel.authenticate(username, password, (err, account) => {
+    if (err || !account) {
+      return res.status(401).json({ error: 'Wrong username or password' });
+    }
+
+    return Account.AccountModel.generateHash(req.body.pass2, (salt, hash) => {
+      const accountData = {
+        username: req.session.account.username,
+        salt,
+        password: hash,
+      };
+
+      return Account.AccountModel.findAndUpdate(accountData,
+        req.session.account._id, (error) => {
+          if (error) {
+            console.log(error);
+            return res.status(400).json({ error: 'An error occurred' });
+          }
+
+          return res.json({ redirect: '/logout' });
+        });
+    });
+  });
+};
+
 const getToken = (request, response) => {
   const req = request;
   const res = response;
@@ -87,7 +131,9 @@ const getToken = (request, response) => {
   res.json(csrfJSON);
 };
 
+module.exports.updatePassword = updatePassword;
 module.exports.loginPage = loginPage;
+module.exports.updatePage = updatePage;
 module.exports.login = login;
 module.exports.logout = logout;
 module.exports.signup = signup;

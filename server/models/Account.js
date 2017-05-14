@@ -82,6 +82,19 @@ AccountModel.findByUsername(username, (err, doc) => {
   });
 });
 
+// finds a recipe and updates it
+AccountSchema.statics.findAndUpdate = (data, ownerId, callback) => {
+  const search = {
+    username: data.username,
+  };
+
+  const update = {
+    password: data.password,
+    salt: data.salt,
+  };
+  return AccountModel.find(search).update(update).exec(callback);
+};
+
 AccountModel = mongoose.model('Account', AccountSchema);
 
 module.exports.AccountModel = AccountModel;

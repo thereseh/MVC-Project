@@ -21,11 +21,10 @@ let DropdownButton = ReactBootstrap.DropdownButton;
 
 // loads recipes and categories from database
 const handleRecipe = () => {
-  
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {    
     recipeRenderer.loadRecipesFromServer();
-    modalRenderer.loadCategoriesFromServer();
     recipeRenderer.loadCategoriesFromServer();
+    modalRenderer.loadCategoriesFromServer();
   });
 
   return false;
@@ -50,6 +49,7 @@ const removeRecipe = (id) => {
 const returnKey = () => {
   return $("#cs")[0].attributes.value.value;
 };
+
 const returnData = (name, ingredients, notes, category, id) => {
   let data = {
     name: name,
@@ -61,18 +61,20 @@ const returnData = (name, ingredients, notes, category, id) => {
   return data;
 };
 
+// puts together data needed to do a request for recipes
+// of a certain category
 const getSorted = (category) =>  {
   if (category === "all") {
     recipeRenderer.loadRecipesFromServer();
   } else {
     let key = $("#cs")[0].attributes.value.value;
     let data = `category=${category}&_csrf=${key}`;
-  
     recipeRenderer.sortedCategoriesFromServer(data);
     recipeRenderer.loadCategoriesFromServer();
   }
 };
 
+// puts together data needed to do a put request to update recipe
 const editRecipe = (id) => {
   let data = `id=${id}&` + $("#modalRenderer").serialize();
   sendAjax('PUT', $("#modalRenderer").attr("action"), data, function () {    
@@ -87,9 +89,9 @@ const editRecipe = (id) => {
 const renderModal = function () {
    const recipeList = this;
   // first populate the category dropdown with categries from array in states
-   const cateNodes = this.state.data.map(function (category) {
+   const cateNodes = this.state.data.map(function (category, i) {
     return (
-      <MenuItem key={category._id} eventKey={category._id} value={category} onClick={ ()=> {recipeList.toggleChildMenu(category)}}>{category}</MenuItem>
+      <MenuItem key={i} eventKey={category._id} value={category} onClick={ ()=> {recipeList.toggleChildMenu(category)}}>{category}</MenuItem>
     );
   });
   
@@ -155,7 +157,6 @@ const renderRecipe = function() {
     <div className="grid-item">
      <Panel>
         <h3 className="textName" >{this.props.name} </h3>
-        
         <Button id="showBtn"onClick={ ()=> {recipeList.toggleChildMenu()}}><Glyphicon glyph="chevron-down"/> </Button>
         { this.hasImage() }
         <Collapse in={recipeList.state.open}>
@@ -163,10 +164,16 @@ const renderRecipe = function() {
           <h3 className="textIngr">Category:
           <br /></h3><p className="output">{this.props.category}</p> 
         <h3 className="textIngr">Ingredients:
-          <br /></h3><p className="output">{this.props.ingredients}</p> 
+          <br /></h3>
+          {
+            this.state.noteLines.map(function(name, i) {
+              return <p key={i}>- {name}</p>;
+            })
+          }
         <h3 className="textNotes" >Notes: 
-          <br /></h3><p className="output">{this.props.notes}</p>
+          <br /></h3><p className="output">
           { this.hasURL() }
+           </p> 
         <Modal.Footer id="listFooter">
            <Button id="editbtn" onClick = {
           () => { 
@@ -184,26 +191,27 @@ const renderRecipe = function() {
   )
 };
 
+/* ====== RENDERS THE LIST OF CHILD RECIPES ======= */
 // renders instances of recipes
 const renderRecipeList = function () {
   if (this.state.data.length === 0) {
     return ( 
       <div className="recipeList">
-        <h3 className="emptyRecipe"> No recipes yet</h3> 
+        <h3 className="emptyRecipe">No recipes yet</h3> 
       </div>
     );
   }
 
   const recipeList = this;
-   const cate2Nodes = this.state.cate.map(function (category) {
+   const cate2Nodes = this.state.cate.map(function (category, i) {
     return (
-      <MenuItem key={category._id} eventKey={category._id} value={category} onClick={ ()=> {getSorted(category)}}>{category}</MenuItem>
+      <MenuItem key={i} eventKey={category._id} value={category} onClick={ ()=> {getSorted(category)}}>{category}</MenuItem>
     );
   });
-  const recipeNodes = this.state.data.map(function (recipe) {
+  const recipeNodes = this.state.data.map(function (recipe, i) {
     return (
-      <div key={recipe._id} className="recipe">
-      <Recipe name={recipe.name} category={recipe.category} ingredients={recipe.ingredients} notes={recipe.notes} id={recipe._id} img={recipe.image} site={recipe.website} />
+      <div key={i} className="recipe">
+      <Recipe name={recipe.name} category={recipe.category} ingredients={recipe.ingredients} notes={recipe.notes} id={recipe._id} img={recipe.image} site={recipe.website} key={i}/>
       </div>
     );
   });
@@ -216,7 +224,7 @@ const renderRecipeList = function () {
       name = "_csrf"
       value = {this.props.csrf}
     /> 
-       <DropdownButton bsStyle="default" title="Categories" id="sortDropDown">
+       <DropdownButton bsStyle="default" title="Sort by Categories" id="sortDropDown">
         <MenuItem eventKey={0} value='all' onClick={ ()=> {getSorted('all')}}>All</MenuItem>
           {cate2Nodes}
       </DropdownButton>
@@ -227,6 +235,8 @@ const renderRecipeList = function () {
   );
 };
 
+
+/* ====== CREATES THE MODAL ======= */
 const createModal = function(csrf, action, method, data) {
   AddNewRecipeClass = React.createClass({
     getInitialState() {
@@ -302,6 +312,8 @@ const createModal = function(csrf, action, method, data) {
   );
 };
 
+
+/* ====== CHILD RECIPE CLASS ======= */
 const defaultRecipeProps = function () {
   return {
     open: false,
@@ -330,6 +342,7 @@ const Recipe = React.createClass({
   getInitialState: function () {
       return {
         open: false,
+        noteLines: [],
       };
     },
   hasImage(){
@@ -347,9 +360,23 @@ const Recipe = React.createClass({
       );
     }
   },
+  parseText() {
+    let lines = [];
+      console.dir(this.props.ingredients);
+     let split = this.props.ingredients.split(/[\n,]/);
+        for (let i = 0; i < split.length; i++) {
+          if (split[i]) lines.push(split[i].trim());
+        }
+      console.log(lines);
+      this.setState({noteLines: lines});
+
+  },
   // toggling to show/hide recipe info
    toggleChildMenu() {
       this.setState({open: !this.state.open});
+    },
+  componentDidMount: function () {
+      this.parseText();
     },
 });
 
@@ -373,21 +400,20 @@ const setup = function (csrf) {
   RecipeListClass = React.createClass({
     loadRecipesFromServer: function () {
       sendAjax('GET', '/getRecipes', null, function (data) {
-        console.dir(data);
         this.setState({
           data: data.recipes,
         });
       }.bind(this));
     },
+    // loads all (unique) categories from the server
     loadCategoriesFromServer: function () {
       sendAjax('GET', '/getCategories', null, function (data) {
-        console.log('list:')
-        console.dir(data);
         this.setState({
           cate: data.categories,
         });
       }.bind(this));
     },
+    // get recipes of specific category
     sortedCategoriesFromServer: function (info) {
       sendAjax('PUT', '/getSorted', info, function (data) {
         this.setState({
