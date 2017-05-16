@@ -286,9 +286,6 @@ var renderRecipe = function renderRecipe() {
                     }
                   }
                   createModal(returnKey(), '/editRecipe', 'PUT', returnData(_this.props.name, _this.props.ingredients, _this.props.notes, _this.props.category, _this.props.id));
-                  {
-                    _this.parseText();
-                  }
                 } },
               " Edit"
             ),
