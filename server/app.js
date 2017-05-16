@@ -74,7 +74,7 @@ app.use((err, req, res, next) => {
   return false;
 });
 
-
+// for API call, takes care of parameters
 const handleParams = (req, response, parsedUrl) => {
   console.log('handleParams reached');
   // if the upload stream errors out, just throw a
@@ -94,6 +94,7 @@ const handleParams = (req, response, parsedUrl) => {
   }
 };
 
+// for API call, on search, call handlparams, which calls method in API js file
 app.post('/search', (req, res) => {
   const parsedUrl = url.parse(req.url);
   handleParams(req, res, parsedUrl);

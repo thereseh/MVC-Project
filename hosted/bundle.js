@@ -205,7 +205,6 @@ var renderModal = function renderModal() {
 var renderRecipe = function renderRecipe() {
   var _this = this;
 
-  var recipeList = this;
   return React.createElement(
     "div",
     { className: "grid-item" },
@@ -221,14 +220,14 @@ var renderRecipe = function renderRecipe() {
       React.createElement(
         Button,
         { id: "showBtn", onClick: function onClick() {
-            recipeList.toggleChildMenu();
+            _this.toggleChildMenu();
           } },
         React.createElement(Glyphicon, { glyph: "chevron-down" }),
         " "
       ),
       React.createElement(
         Collapse,
-        { "in": recipeList.state.open },
+        { "in": this.state.open },
         React.createElement(
           "div",
           { id: "recipeCont" },
@@ -249,7 +248,7 @@ var renderRecipe = function renderRecipe() {
             "Ingredients:",
             React.createElement("br", null)
           ),
-          this.state.noteLines.map(function (name, i) {
+          this.props.ingredients.map(function (name, i) {
             return React.createElement(
               "p",
               { key: i },
@@ -266,8 +265,13 @@ var renderRecipe = function renderRecipe() {
           React.createElement(
             "p",
             { className: "output" },
-            this.props.notes,
-            React.createElement("br", null),
+            this.props.notes.map(function (name, i) {
+              return React.createElement(
+                "p",
+                { key: i },
+                name
+              );
+            }),
             this.hasURL()
           ),
           React.createElement(
@@ -276,15 +280,25 @@ var renderRecipe = function renderRecipe() {
             React.createElement(
               Button,
               { id: "editbtn", onClick: function onClick() {
+                  if (_this.state.open) {
+                    {
+                      _this.toggleChildMenu();
+                    }
+                  }
                   createModal(returnKey(), '/editRecipe', 'PUT', returnData(_this.props.name, _this.props.ingredients, _this.props.notes, _this.props.category, _this.props.id));
+                  {
+                    _this.parseText();
+                  }
                 } },
               " Edit"
             ),
             React.createElement(
               Button,
               { onClick: function onClick() {
-                  {
-                    recipeList.toggleChildMenu();
+                  if (_this.state.open) {
+                    {
+                      _this.toggleChildMenu();
+                    }
                   }
                   removeRecipe(_this.props.id);
                 } },
@@ -470,8 +484,8 @@ var Recipe = React.createClass({
   propTypes: {
     name: React.PropTypes.string,
     category: React.PropTypes.string,
-    ingredients: React.PropTypes.string,
-    notes: React.PropTypes.string,
+    ingredients: React.PropTypes.array,
+    notes: React.PropTypes.array,
     id: React.PropTypes.string,
     site: React.PropTypes.string,
     img: React.PropTypes.string
@@ -479,7 +493,8 @@ var Recipe = React.createClass({
   getInitialState: function getInitialState() {
     return {
       open: false,
-      noteLines: []
+      noteLines: [],
+      ingrLines: []
     };
   },
   // check if certain information exist
@@ -504,25 +519,9 @@ var Recipe = React.createClass({
     }
   },
 
-  // parse out ingredient list, hard to find the best way
-  // right now it helps for when copying yummly recipe
-  parseText: function parseText() {
-    var lines = [];
-    var split = this.props.ingredients.split(/[\n,]/);
-    for (var i = 0; i < split.length; i++) {
-      if (split[i]) lines.push(split[i].trim());
-    }
-    this.setState({ noteLines: lines });
-  },
-
   // toggling to show/hide recipe info
   toggleChildMenu: function toggleChildMenu() {
     this.setState({ open: !this.state.open });
-  },
-
-  // parse text when ready
-  componentDidMount: function componentDidMount() {
-    this.parseText();
   }
 });
 
@@ -543,14 +542,35 @@ var setup = function setup(csrf) {
     return false;
   });
 
+  // parent class for recipes, will create them and display them
   RecipeListClass = React.createClass({
     displayName: "RecipeListClass",
 
     // load recipes from database
     loadRecipesFromServer: function loadRecipesFromServer() {
       sendAjax('GET', '/getRecipes', null, function (data) {
-        console.log('Recipes:');
-        console.dir(data);
+        // parse info into arrays for better display
+        var lines1 = [];
+        var lines2 = [];
+
+        for (var i = 0; i < data.recipes.length; i++) {
+          // for ingr
+          var split = data.recipes[i].ingredients.split(/[\n,]/);
+          for (var _i = 0; _i < split.length; _i++) {
+            if (split[_i]) lines1.push(split[_i].trim());
+          }
+          // for notes
+          split = data.recipes[i].notes.split('\n');
+          for (var _i2 = 0; _i2 < split.length; _i2++) {
+            if (split[_i2]) lines2.push(split[_i2].trim());
+          }
+
+          data.recipes[i].ingredients = lines1;
+          data.recipes[i].notes = lines2;
+          lines1 = [];
+          lines2 = [];
+        }
+
         this.setState({
           data: data.recipes
         });
@@ -600,11 +620,13 @@ $(document).ready(function () {
 });
 "use strict";
 
+// toggle show/hide error message
 var handleError = function handleError(message) {
   $("#errorMessage").text(message);
   $("#errorMessage").toggle('fast');
 };
 
+// new action, hide error messag
 var redirect = function redirect(response) {
   $("#errorMessage").hide();
   window.location = response.redirect;

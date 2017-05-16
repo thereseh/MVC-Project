@@ -24,14 +24,17 @@ const editRecipe = (request, response) => {
   const req = request;
   const res = response;
 
+  // id is used to find the correct user
+  // rest is what to update
   const data = {
     name: req.body.name,
+    category: req.body.category,
     ingredients: req.body.ingredients,
     notes: req.body.notes,
     id: req.body.id,
-    category: req.body.category,
   };
 
+  // find this recipe and update it
   return Recipe.RecipeModel.findAndUpdate(data, req.session.account._id, (err, docs) => {
     if (err) {
       console.log(err);
@@ -42,7 +45,7 @@ const editRecipe = (request, response) => {
   });
 };
 
-// creates a recip
+// creates a recipe
 const makeRecipe = (req, res) => {
   if (!req.body.name) {
     return res.status(400).json({ error: 'Need to fill out fields!' });
@@ -85,6 +88,7 @@ const getSorted = (request, response) => {
     category: req.body.category,
   };
 
+  // find and returns all recipies of the specified category
   return Recipe.RecipeModel.findRecipiesByCategories(data, req.session.account._id, (err, docs) => {
     if (err) {
       console.log(err);
@@ -101,6 +105,7 @@ const getRecipes = (request, response) => {
   const req = request;
   const res = response;
 
+  // return all recipes of this owner
   return Recipe.RecipeModel.findByOwner(req.session.account._id, (err, docs) => {
     if (err) {
       console.log(err);
@@ -115,14 +120,16 @@ const getCategories = (request, response) => {
   const req = request;
   const res = response;
 
+  // finds all unique categories (if duplicates, returns only one instance)
   return Recipe.RecipeModel.findCategoriesByOwner(req.session.account._id, (err, docs) => {
     if (err) {
       console.log(err);
       return res.status(400).json({ error: 'An error occurred' });
     }
 
+    // not all recipes has a declared category
     // finds index of the empty string
-    const empty = docs.indexOf(' ');
+    const empty = docs.indexOf('');
     // remove the empty string
     docs.splice(empty, 1);
     return res.json({ categories: docs });
@@ -133,13 +140,12 @@ const getCategories = (request, response) => {
 const removeRecipe = (request, response) => {
   const req = request;
   const res = response;
+
   const data = {
     id: req.body.id,
-    name: req.body.name,
-    ingredients: req.body.ingr,
-    category: req.body.category,
-    notes: req.body.notes,
   };
+
+  // finds recipe and removes it
   return Recipe.RecipeModel.findAndRemove(data, req.session.account._id, (err, docs) => {
     if (err) {
       console.log(err);

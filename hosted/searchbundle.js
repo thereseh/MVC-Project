@@ -21,10 +21,11 @@ var Modal = ReactBootstrap.Modal;
 var Glyphicon = ReactBootstrap.Glyphicon;
 var Clearfix = ReactBootstrap.Clearfix;
 
-// sets up info needed to do a AJAX request
+// sets up info needed to do a API call from server
 var handleSearch = function handleSearch(e) {
   e.preventDefault();
   var info = $("#searchForm").serialize();
+  // find this word in the string
   var n = info.search("_csrf");
   // slice out the key
   var key = info.slice(n, info.length);
@@ -198,9 +199,6 @@ var renderRecipeSearch = function renderRecipeSearch() {
               Button,
               { id: "copyBtn", onClick: function onClick() {
                   copyRecipe(_this.props.name, _this.props.img, _this.props.ingredients, _this.props.rating, _this.props.time, _this.props.url);
-                  {
-                    _this.toggleChildMenu();
-                  }
                 } },
               React.createElement(Glyphicon, { glyph: "copy" }),
               " "
@@ -212,8 +210,7 @@ var renderRecipeSearch = function renderRecipeSearch() {
   );
 };
 
-// render the search field, need to add more functionality
-// such as specific requirements for allergens and such
+// render the search field
 var renderSearch = function renderSearch() {
   return React.createElement(
     Panel,
@@ -318,6 +315,7 @@ var createSearchList = function createSearchList(csrf) {
   searchListRenderer = ReactDOM.render(React.createElement(SearchList, { csrf: csrf }), document.querySelector("#searchResults"));
 };
 
+// class to render the search window
 var createSearchWindow = function createSearchWindow(csrf) {
   var SearchWindow = React.createClass({
     displayName: "SearchWindow",
@@ -330,7 +328,6 @@ var createSearchWindow = function createSearchWindow(csrf) {
     },
     handleSubmit: function handleSubmit(e) {
       e.preventDefault();
-      this.setState({ showModal: false });
       handleSearch(e);
     },
     handleChange: function handleChange(e) {
@@ -358,11 +355,13 @@ $(document).ready(function () {
 });
 "use strict";
 
+// toggle show/hide error message
 var handleError = function handleError(message) {
   $("#errorMessage").text(message);
   $("#errorMessage").toggle('fast');
 };
 
+// new action, hide error messag
 var redirect = function redirect(response) {
   $("#errorMessage").hide();
   window.location = response.redirect;

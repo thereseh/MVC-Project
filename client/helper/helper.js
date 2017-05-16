@@ -1,9 +1,10 @@
+// toggle show/hide error message
 const handleError = (message) => {
   $("#errorMessage").text(message);
   $("#errorMessage").toggle('fast');
-
 };
 
+// new action, hide error messag
 const redirect = (response) => {
   $("#errorMessage").hide();
   window.location = response.redirect;

@@ -90,6 +90,7 @@ RecipeSchema.statics.findCategoriesByOwner = (ownerId, callback) => {
     owner: convertId(ownerId),
   };
 
+  // distinct allows to return unique values
   return RecipeModel.distinct('category', search, callback);
 };
 
@@ -107,6 +108,8 @@ RecipeSchema.statics.findRecipiesByCategories = (data, ownerId, callback) => {
 
 // finds a specific domo and removes it
 RecipeSchema.statics.findAndRemove = (data, ownerId, callback) => {
+  // using recipe id and name of owner
+  // from session with account info from log in
   const search = {
     owner: ownerId,
     _id: data.id,
@@ -117,6 +120,8 @@ RecipeSchema.statics.findAndRemove = (data, ownerId, callback) => {
 
 // finds a recipe and updates it
 RecipeSchema.statics.findAndUpdate = (data, ownerId, callback) => {
+  // using recipe id and name of owner
+  // from session with account info from log in
   const search = {
     owner: ownerId,
     _id: data.id,

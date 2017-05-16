@@ -15,6 +15,7 @@ const logout = (req, res) => {
   res.redirect('/');
 };
 
+// method for when client tries to log in
 const login = (request, response) => {
   const req = request;
   const res = response;
@@ -22,21 +23,25 @@ const login = (request, response) => {
   const username = `${req.body.username}`;
   const password = `${req.body.pass}`;
 
+  // check if either is empty
   if (!username || !password) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
+  // make authntication to check if the password is correct
   return Account.AccountModel.authenticate(username, password, (err, account) => {
     if (err || !account) {
       return res.status(401).json({ error: 'Wrong username or password' });
     }
 
+    // create a session with unique data
     req.session.account = Account.AccountModel.toAPI(account);
 
     return res.json({ redirect: '/maker' });
   });
 };
 
+// when the client creates a log in
 const signup = (request, response) => {
   const req = request;
   const res = response;
@@ -45,14 +50,17 @@ const signup = (request, response) => {
   req.body.pass = `${req.body.pass}`;
   req.body.pass2 = `${req.body.pass2}`;
 
+  // all fields required
   if (!req.body.username || !req.body.pass || !req.body.pass2) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
+  // passwords are not the same
   if (req.body.pass !== req.body.pass2) {
     return res.status(400).json({ error: 'passwords do not match' });
   }
 
+  // generate hash
   return Account.AccountModel.generateHash(req.body.pass, (salt, hash) => {
     const accountData = {
       username: req.body.username,
@@ -60,6 +68,7 @@ const signup = (request, response) => {
       password: hash,
     };
 
+    // use username, salt and hash to create account
     const newAccount = new Account.AccountModel(accountData);
 
     const savePromise = newAccount.save();
@@ -81,10 +90,12 @@ const signup = (request, response) => {
   });
 };
 
+// if the client changes their password
 const updatePassword = (request, response) => {
   const req = request;
   const res = response;
 
+  // all fields required
   if (!req.body.username || !req.body.pass || !req.body.pass2) {
     return res.status(400).json({ error: 'All fields are required' });
   }
@@ -93,14 +104,24 @@ const updatePassword = (request, response) => {
   const password = `${req.body.pass}`;
 
 
+  // current pass
   req.body.pass = `${req.body.pass}`;
+  // new pass
   req.body.pass2 = `${req.body.pass2}`;
 
+  // check if the current pass is correct
   return Account.AccountModel.authenticate(username, password, (err, account) => {
     if (err || !account) {
       return res.status(401).json({ error: 'Wrong username or password' });
     }
 
+    // are the passwords the same? doesn't make sense to change it then
+    // so won't allow it
+    if (req.body.pass === req.body.pass2) {
+      return res.status(401).json({ error: 'New password cannot be same as current password!' });
+    }
+
+    // generate hash with the new password
     return Account.AccountModel.generateHash(req.body.pass2, (salt, hash) => {
       const accountData = {
         username: req.session.account.username,
@@ -108,6 +129,7 @@ const updatePassword = (request, response) => {
         password: hash,
       };
 
+      // method call to find this user in the database and update the password
       return Account.AccountModel.findAndUpdate(accountData,
         req.session.account._id, (error) => {
           if (error) {
@@ -115,6 +137,8 @@ const updatePassword = (request, response) => {
             return res.status(400).json({ error: 'An error occurred' });
           }
 
+        // prompt user to log out so the session is killed and they are forced to log in
+        // again with their new password
           return res.json({ redirect: '/logout' });
         });
     });

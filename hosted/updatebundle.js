@@ -8,10 +8,12 @@ var Panel = ReactBootstrap.Panel;
 var Modal = ReactBootstrap.Modal;
 var Button = ReactBootstrap.Button;
 
+// makes a request to change password
 var handleChange = function handleChange(e) {
   e.preventDefault();
   $("#errorMessage").animate({ width: 'hide' }, 350);
 
+  // makes sure that none of the values are empyu
   if ($("#user").val() == '' || $("#pass").val() == '' || $("#pass2").val() == '') {
     handleError("All fields are required");
     return false;
@@ -74,6 +76,7 @@ var renderChange = function renderChange() {
   );
 };
 
+// class for change form
 var createChangeWindow = function createChangeWindow(csrf) {
   var ChangeWindow = React.createClass({
     displayName: "ChangeWindow",
@@ -100,11 +103,13 @@ $(document).ready(function () {
 });
 "use strict";
 
+// toggle show/hide error message
 var handleError = function handleError(message) {
   $("#errorMessage").text(message);
   $("#errorMessage").toggle('fast');
 };
 
+// new action, hide error messag
 var redirect = function redirect(response) {
   $("#errorMessage").hide();
   window.location = response.redirect;

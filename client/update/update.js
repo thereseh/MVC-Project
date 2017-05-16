@@ -6,12 +6,13 @@ let Panel = ReactBootstrap.Panel;
 let Modal = ReactBootstrap.Modal;
 let Button = ReactBootstrap.Button;
 
-
+// makes a request to change password
 const handleChange = (e) => {
   e.preventDefault();
   $("#errorMessage").animate({width:'hide'},350);
 
-  if($("#user").val() == '' || $("#pass").val() == '' || $("#pass2").val() == '') {
+  // makes sure that none of the values are empyu
+  if ($("#user").val() == '' || $("#pass").val() == '' || $("#pass2").val() == '') {
     handleError("All fields are required");
     return false;
   }
@@ -54,6 +55,7 @@ const renderChange = function() {
  );
 };
 
+// class for change form
 const createChangeWindow = function(csrf) {
   const ChangeWindow = React.createClass({
     handleSubmit: handleChange,

@@ -19,10 +19,11 @@ let Modal = ReactBootstrap.Modal;
 let Glyphicon = ReactBootstrap.Glyphicon;
 let Clearfix = ReactBootstrap.Clearfix;
 
-// sets up info needed to do a AJAX request
+// sets up info needed to do a API call from server
 const handleSearch = (e) => {
   e.preventDefault();
   let info = $("#searchForm").serialize();
+  // find this word in the string
   let n = info.search("_csrf");
   // slice out the key
   let key = info.slice(n, info.length);
@@ -131,7 +132,6 @@ const renderRecipeSearch = function() {
        <Button id="copyBtn" onClick = {
           () => { 
             copyRecipe(this.props.name, this.props.img, this.props.ingredients, this.props.rating,this.props.time,this.props.url)
-            {this.toggleChildMenu()}
           }} ><Glyphicon glyph="copy" /> </Button>
                 </OverlayTrigger>
               </ButtonToolbar>
@@ -141,8 +141,7 @@ const renderRecipeSearch = function() {
   );
 };
 
-// render the search field, need to add more functionality
-// such as specific requirements for allergens and such
+// render the search field
 const renderSearch = function() {
  return (
      <Panel>
@@ -236,7 +235,7 @@ const createSearchList = function(csrf) {
   );
 };
 
-
+// class to render the search window
 const createSearchWindow = function(csrf) {
   const SearchWindow = React.createClass({
      getInitialState() {
@@ -248,7 +247,6 @@ const createSearchWindow = function(csrf) {
      },
      handleSubmit(e) {
       e.preventDefault();
-      this.setState({ showModal: false });
       handleSearch(e);
     },
     handleChange(e) {

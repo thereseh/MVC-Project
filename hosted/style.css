@@ -194,6 +194,7 @@ a:focus, a:hover {
   height: auto;
   display: block;
   margin-bottom: 15px;
+  position: relative;
 }
 
 .textIngr, .textNotes {

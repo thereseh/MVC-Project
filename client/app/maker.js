@@ -157,36 +157,46 @@ const renderModal = function () {
 
 // renders the child list of recipes retrieved from database using props from parent
 const renderRecipe = function() {
-  const recipeList = this;
   return (
     <div className="grid-item">
      <Thumbnail src={ this.hasImage() } alt="" id="searchImg">
        <h3 className="textName">{this.props.name} </h3>
-        <Button id="showBtn"onClick={ ()=> {recipeList.toggleChildMenu()}}><Glyphicon glyph="chevron-down"/> </Button>
-        <Collapse in={recipeList.state.open}>
+        <Button id="showBtn"onClick={ ()=> {this.toggleChildMenu()}}><Glyphicon glyph="chevron-down"/> </Button>
+        <Collapse in={this.state.open}>
         <div id="recipeCont">
           <h3 className="textIngr">Category:
           <br /></h3><p className="output">{this.props.category}</p> 
         <h3 className="textIngr">Ingredients:
           <br /></h3>
           {
-            this.state.noteLines.map(function(name, i) {
+            this.props.ingredients.map(function(name, i) {
               return <p key={i}>- {name}</p>;
             })
           }
         <h3 className="textNotes" >Notes: 
           <br /></h3><p className="output">
-          {this.props.notes}<br />
+         {
+            this.props.notes.map(function(name, i) {
+              return <p key={i}>{name}</p>;
+            })
+          }
           { this.hasURL() }
            </p> 
         <Modal.Footer id="listFooter">
            <Button id="editbtn" onClick = {
-          () => { 
-            createModal(returnKey(), '/editRecipe', 'PUT', returnData(this.props.name, this.props.ingredients, this.props.notes, this.props.category, this.props.id))}}> Edit
+          () => {
+            if (this.state.open) {
+            {this.toggleChildMenu()}
+            }
+            createModal(returnKey(), '/editRecipe', 'PUT', returnData(this.props.name, this.props.ingredients, this.props.notes, this.props.category, this.props.id))
+            {this.parseText()}
+          }}> Edit
             </Button>
         <Button onClick = {
           () => { 
-            {recipeList.toggleChildMenu()}
+            if (this.state.open) {
+            {this.toggleChildMenu()}
+            }
             removeRecipe(this.props.id)
           }}><Glyphicon glyph = "trash"/> </Button>
         </Modal.Footer>
@@ -344,8 +354,8 @@ const Recipe = React.createClass({
   propTypes: {
     name: React.PropTypes.string,
     category: React.PropTypes.string,
-    ingredients: React.PropTypes.string,
-    notes: React.PropTypes.string,
+    ingredients: React.PropTypes.array,
+    notes: React.PropTypes.array,
     id: React.PropTypes.string,
     site: React.PropTypes.string,
     img: React.PropTypes.string,
@@ -354,6 +364,7 @@ const Recipe = React.createClass({
       return {
         open: false,
         noteLines: [],
+        ingrLines: [],
       };
     },
   // check if certain information exist
@@ -371,24 +382,9 @@ const Recipe = React.createClass({
       );
     }
   },
-  // parse out ingredient list, hard to find the best way
-  // right now it helps for when copying yummly recipe
-  parseText() {
-    let lines = [];
-     let split = this.props.ingredients.split(/[\n,]/);
-        for (let i = 0; i < split.length; i++) {
-          if (split[i]) lines.push(split[i].trim());
-        }
-      this.setState({noteLines: lines});
-
-  },
   // toggling to show/hide recipe info
    toggleChildMenu() {
       this.setState({open: !this.state.open});
-    },
-  // parse text when ready
-  componentDidMount: function () {
-      this.parseText();
     },
 });
 
@@ -409,12 +405,33 @@ const setup = function (csrf) {
       return false;
    });
 
+  // parent class for recipes, will create them and display them
   RecipeListClass = React.createClass({
     // load recipes from database
     loadRecipesFromServer: function () {
-      sendAjax('GET', '/getRecipes', null, function (data) {
-        console.log('Recipes:');
-        console.dir(data);
+      sendAjax('GET', '/getRecipes', null, function (data) {        
+        // parse info into arrays for better display
+        let lines1 = [];
+        let lines2 = [];
+        
+        for(let i = 0; i < data.recipes.length; i++) {
+           // for ingr
+          let split = data.recipes[i].ingredients.split(/[\n,]/);
+          for (let i = 0; i < split.length; i++) {
+            if (split[i]) lines1.push(split[i].trim());
+          }
+          // for notes
+          split = data.recipes[i].notes.split('\n');
+          for (let i = 0; i < split.length; i++) {
+            if (split[i]) lines2.push(split[i].trim());
+          }
+          
+          data.recipes[i].ingredients = lines1;
+          data.recipes[i].notes = lines2;
+          lines1 = [];
+          lines2 = [];
+        }
+        
         this.setState({
           data: data.recipes,
         });

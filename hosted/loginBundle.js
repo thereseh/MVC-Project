@@ -8,42 +8,45 @@ var Panel = ReactBootstrap.Panel;
 var Modal = ReactBootstrap.Modal;
 var Button = ReactBootstrap.Button;
 
+// log in handler
 var handleLogin = function handleLogin(e) {
   e.preventDefault();
   $("#errorMessage").hide();
 
+  // makes sure username or password is not empty
   if ($("#user").val() == '' || $("#pass").val() == '') {
     handleError("Username or password is empty");
     return false;
   }
-
-  console.log($("input[name=_csrf]").val());
-
+  // post request to get user key and session id  
   sendAjax('POST', $("#loginForm").attr("action"), $("#loginForm").serialize(), redirect);
-
   return false;
 };
 
+// creates a user and store in database
 var handleSignup = function handleSignup(e) {
   e.preventDefault();
   $("#errorMessage").hide();
 
+  // make sure no field is empty
   if ($("#user").val() == '' || $("#pass").val() == '' || $("#pass2").val() == '') {
     handleError("All fields are required");
     return false;
   }
 
+  // checks to see if user wrote correct password twice
   if ($("#pass").val() !== $("#pass2").val()) {
     handleError("Passwords do not match");
     return false;
   }
 
+  // post to create a user
   sendAjax('POST', $("#signupForm").attr("action"), $("#signupForm").serialize(), redirect);
 
   return false;
 };
 
-// to log in
+// render log in form
 var renderLogin = function renderLogin() {
   return React.createElement(
     Panel,
@@ -139,6 +142,7 @@ var renderSignup = function renderSignup() {
   );
 };
 
+// class for log in
 var createLoginWindow = function createLoginWindow(csrf) {
   var LoginWindow = React.createClass({
     displayName: "LoginWindow",
@@ -150,6 +154,7 @@ var createLoginWindow = function createLoginWindow(csrf) {
   ReactDOM.render(React.createElement(LoginWindow, { csrf: csrf }), document.querySelector("#contentLogin"));
 };
 
+// class for sign up
 var createSignupWindow = function createSignupWindow(csrf) {
   var SignupWindow = React.createClass({
     displayName: "SignupWindow",
@@ -191,11 +196,13 @@ $(document).ready(function () {
 });
 "use strict";
 
+// toggle show/hide error message
 var handleError = function handleError(message) {
   $("#errorMessage").text(message);
   $("#errorMessage").toggle('fast');
 };
 
+// new action, hide error messag
 var redirect = function redirect(response) {
   $("#errorMessage").hide();
   window.location = response.redirect;

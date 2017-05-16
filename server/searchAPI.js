@@ -1,21 +1,10 @@
- // Node's built-in cryptography module.
-// const crypto = require('crypto');
-// const querystring = require('querystring');
-// const http = require('http');
-const Yummly = require('ws-yummly');
-// const _ = require('underscore');
 
+const Yummly = require('ws-yummly');
 
 Yummly.config({
   app_id: '19a24bb5',
   app_key: '490c1135987b38fb49ad3de5c9b74e09',
 });
-
- // sha1 is a bit of a quicker hash algorithm for insecure things
- // const etag = crypto.createHash('sha1').update(JSON.stringify(credentials));
- // // grab the hash as a hex string
- // const digest = etag.digest('hex');
-
 
 const respondJSON = (request, response, status, object) => {
   const headers = {
@@ -29,20 +18,18 @@ const respondJSON = (request, response, status, object) => {
 
  // returns all recipes
 const searchYummly = (req, res) => {
-   // if (req.headers['if-none-match'] === digest) {
-   //   console.log(req.headers['if-none-match']);
-   //   return respondJSONMeta(req, res, 304);
-   // }
-
   const id = [];
   let recipes = {};
   const recipestwo = [];
 
-  if (req.body.searchRec === '') {
-    console.log('empty');
-    // search = '';
-  }
 
+  /* I took out the other options because the API is funky.
+    I was receiving recipes that were not part of the diet/allergy requested,
+    but even when I did my own GET request directly in brower,
+    I'll would the same result.
+    Although, removing the query parameter made it more correct in browser,
+    which this node library don't allow.
+    I'll attempt to set up my own double-URL call another time*/
   Yummly.query(req.body.searchRec)
   .maxResults(40)
   .paginate(40)
