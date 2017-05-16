@@ -37,52 +37,31 @@ const searchYummly = (req, res) => {
   const id = [];
   let recipes = {};
   const recipestwo = [];
-  let diets = '';
-  let allergy = '';
-  let cuisine = '';
-  // let search = '';
+
   if (req.body.searchRec === '') {
     console.log('empty');
     // search = '';
   }
-  if (req.body.diet) {
-    diets = req.body.diet;
-  }
-  if (req.body.allergy) {
-    allergy = req.body.allergy;
-  }
-  if (req.body.cuisine) {
-    cuisine = req.body.cuisine;
-  }
 
-  console.log(cuisine);
-  console.log(diets);
-  console.log(allergy);
-  Yummly.query('pasta')
-    .maxResults(20)
-    .paginate(10)
-    .allowedDiets('Vegan')
-    .allowedAllergies('gluten')
-    .requirePictures(true)
-    .get()
-    .then((resp) => {
-      resp.matches.forEach((recipe) => {
-        recipes = recipe;
-      });
-      for (let i = 0; i < recipes.length; i++) {
-        id.push(recipes[i].id);
-      }
-      Yummly.getDetails(id).then((resps) => {
-        resps.forEach((recipe) => {
-          recipestwo.push(recipe);
-        });
-        respondJSON(req, res, 200, recipestwo);
-      });
-    })
-    .then((err) => {
-      console.dir(err);
+  Yummly.query(req.body.searchRec)
+  .maxResults(40)
+  .paginate(40)
+  .requirePictures(true)
+  .get()
+  .then((resp) => {
+    resp.matches.forEach((recipe) => {
+      recipes = recipe;
     });
-
+    for (let i = 0; i < recipes.length; i++) {
+      id.push(recipes[i].id);
+    }
+    Yummly.getDetails(id).then((resps) => {
+      resps.forEach((recipe) => {
+        recipestwo.push(recipe);
+      });
+      respondJSON(req, res, 200, recipestwo);
+    });
+  });
   return false;
 };
 

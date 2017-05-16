@@ -22,8 +22,10 @@ var Modal = ReactBootstrap.Modal;
 var SplitButton = ReactBootstrap.SplitButton;
 var MenuItem = ReactBootstrap.MenuItem;
 var DropdownButton = ReactBootstrap.DropdownButton;
+var Thumbnail = ReactBootstrap.Thumbnail;
 
-// loads recipes and categories from database
+// adds a recipe to the database, one callback, updates the page by
+// loading all recipes and categories.
 var handleRecipe = function handleRecipe() {
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {
     recipeRenderer.loadRecipesFromServer();
@@ -34,24 +36,28 @@ var handleRecipe = function handleRecipe() {
   return false;
 };
 
-/* Removes a recipe from the database */
+var returnKey = function returnKey() {
+  return $("#cs")[0].attributes.value.value;
+};
+
+// Removes a recipe from the database
 var removeRecipe = function removeRecipe(id) {
-  // get key value, not safe
-  var key = $("#cs")[0].attributes.value.value;
+  // get key value
+  var key = returnKey();
   // data to send
   var data = "id=" + id + "&_csrf=" + key;
+  // clean it up
   data = data.replace(/ /g, '+');
+  // deletes the recipe, reload recipes and categories from server
   sendAjax('DELETE', '/removeRecipe', data, function () {
     recipeRenderer.loadRecipesFromServer();
+    recipeRenderer.loadCategoriesFromServer();
   });
 
   return false;
 };
 
-var returnKey = function returnKey() {
-  return $("#cs")[0].attributes.value.value;
-};
-
+// parse info and return object
 var returnData = function returnData(name, ingredients, notes, category, id) {
   var data = {
     name: name,
@@ -63,13 +69,12 @@ var returnData = function returnData(name, ingredients, notes, category, id) {
   return data;
 };
 
-// puts together data needed to do a request for recipes
-// of a certain category
+// puts together data needed to do a request for recipes of a certain category from dropdown
 var getSorted = function getSorted(category) {
   if (category === "all") {
     recipeRenderer.loadRecipesFromServer();
   } else {
-    var key = $("#cs")[0].attributes.value.value;
+    var key = returnKey();
     var data = "category=" + category + "&_csrf=" + key;
     recipeRenderer.sortedCategoriesFromServer(data);
     recipeRenderer.loadCategoriesFromServer();
@@ -205,8 +210,8 @@ var renderRecipe = function renderRecipe() {
     "div",
     { className: "grid-item" },
     React.createElement(
-      Panel,
-      null,
+      Thumbnail,
+      { src: this.hasImage(), alt: "", id: "searchImg" },
       React.createElement(
         "h3",
         { className: "textName" },
@@ -221,7 +226,6 @@ var renderRecipe = function renderRecipe() {
         React.createElement(Glyphicon, { glyph: "chevron-down" }),
         " "
       ),
-      this.hasImage(),
       React.createElement(
         Collapse,
         { "in": recipeList.state.open },
@@ -262,6 +266,8 @@ var renderRecipe = function renderRecipe() {
           React.createElement(
             "p",
             { className: "output" },
+            this.props.notes,
+            React.createElement("br", null),
             this.hasURL()
           ),
           React.createElement(
@@ -277,6 +283,9 @@ var renderRecipe = function renderRecipe() {
             React.createElement(
               Button,
               { onClick: function onClick() {
+                  {
+                    recipeList.toggleChildMenu();
+                  }
                   removeRecipe(_this.props.id);
                 } },
               React.createElement(Glyphicon, { glyph: "trash" }),
@@ -305,6 +314,7 @@ var renderRecipeList = function renderRecipeList() {
   }
 
   var recipeList = this;
+  // get anther dropdown used for sorting recipes by category
   var cate2Nodes = this.state.cate.map(function (category, i) {
     return React.createElement(
       MenuItem,
@@ -314,6 +324,7 @@ var renderRecipeList = function renderRecipeList() {
       category
     );
   });
+  // create instances of recipe child class
   var recipeNodes = this.state.data.map(function (recipe, i) {
     return React.createElement(
       "div",
@@ -332,16 +343,20 @@ var renderRecipeList = function renderRecipeList() {
       value: this.props.csrf
     }),
     React.createElement(
-      DropdownButton,
-      { bsStyle: "default", title: "Sort by Categories", id: "sortDropDown" },
+      "div",
+      { className: "sortD" },
       React.createElement(
-        MenuItem,
-        { eventKey: 0, value: "all", onClick: function onClick() {
-            getSorted('all');
-          } },
-        "All"
-      ),
-      cate2Nodes
+        DropdownButton,
+        { bsStyle: "default", title: "Sort by Categories", id: "sortDropDown" },
+        React.createElement(
+          MenuItem,
+          { eventKey: 0, value: "all", onClick: function onClick() {
+              getSorted('all');
+            } },
+          "All"
+        ),
+        cate2Nodes
+      )
     ),
     React.createElement(
       "div",
@@ -351,7 +366,7 @@ var renderRecipeList = function renderRecipeList() {
   );
 };
 
-/* ====== CREATES THE MODAL ======= */
+/* ====== CREATE THE MODAL CLASS ======= */
 var createModal = function createModal(csrf, action, method, data) {
   AddNewRecipeClass = React.createClass({
     displayName: "AddNewRecipeClass",
@@ -374,8 +389,6 @@ var createModal = function createModal(csrf, action, method, data) {
     // calls the database to retrieve categories
     loadCategoriesFromServer: function loadCategoriesFromServer() {
       sendAjax('GET', '/getCategories', null, function (data) {
-        console.log('modal:');
-        console.dir(data);
         this.setState({
           data: data.categories
         });
@@ -402,9 +415,13 @@ var createModal = function createModal(csrf, action, method, data) {
     handleChangeName: function handleChangeName(e) {
       this.setState({ name: e.target.value });
     },
+
+    // to set notes
     handleChangeNotes: function handleChangeNotes(e) {
       this.setState({ notes: e.target.value });
     },
+
+    // to set ingredients
     handleChangeIngr: function handleChangeIngr(e) {
       this.setState({ ingredients: e.target.value });
     },
@@ -422,6 +439,7 @@ var createModal = function createModal(csrf, action, method, data) {
       this.setState({ category: value });
     },
 
+    // load categories to dropdown when created
     componentDidMount: function componentDidMount() {
       this.loadCategoriesFromServer();
     },
@@ -464,9 +482,11 @@ var Recipe = React.createClass({
       noteLines: []
     };
   },
+  // check if certain information exist
+  // if so, either return it or render it!
   hasImage: function hasImage() {
     if (this.props.img != "") {
-      return React.createElement("img", { src: this.props.img, id: "searchImg" });
+      return this.props.img;
     }
   },
   hasURL: function hasURL() {
@@ -483,14 +503,15 @@ var Recipe = React.createClass({
       );
     }
   },
+
+  // parse out ingredient list, hard to find the best way
+  // right now it helps for when copying yummly recipe
   parseText: function parseText() {
     var lines = [];
-    console.dir(this.props.ingredients);
     var split = this.props.ingredients.split(/[\n,]/);
     for (var i = 0; i < split.length; i++) {
       if (split[i]) lines.push(split[i].trim());
     }
-    console.log(lines);
     this.setState({ noteLines: lines });
   },
 
@@ -499,6 +520,7 @@ var Recipe = React.createClass({
     this.setState({ open: !this.state.open });
   },
 
+  // parse text when ready
   componentDidMount: function componentDidMount() {
     this.parseText();
   }
@@ -524,8 +546,11 @@ var setup = function setup(csrf) {
   RecipeListClass = React.createClass({
     displayName: "RecipeListClass",
 
+    // load recipes from database
     loadRecipesFromServer: function loadRecipesFromServer() {
       sendAjax('GET', '/getRecipes', null, function (data) {
+        console.log('Recipes:');
+        console.dir(data);
         this.setState({
           data: data.recipes
         });
@@ -577,11 +602,11 @@ $(document).ready(function () {
 
 var handleError = function handleError(message) {
   $("#errorMessage").text(message);
-  $("#errorMessage").animate({ width: 'toggle' }, 350);
+  $("#errorMessage").toggle('fast');
 };
 
 var redirect = function redirect(response) {
-  $("#errorMessage").animate({ width: 'hide' }, 350);
+  $("#errorMessage").hide();
   window.location = response.redirect;
 };
 

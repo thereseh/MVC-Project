@@ -5,19 +5,16 @@ html, body {
     padding: 0;
     overflow-x: hidden;
 }
+
 #content {
   width: 100%;
   height: 100%;
   position: absolute;
 }
 
-.modal-container {
-  position: relative;
-}
-.modal-container .modal, .modal-container .modal-backdrop {
-  position: absolute;
-}
 
+
+/* NAV */
 nav {
  width: 100%;
  height: 65px;
@@ -48,32 +45,6 @@ a:focus, a:hover {
   width: 100%;
   height: 100%;
 }
-/*
-.navlink {
-    padding: 5px;
-    padding-top: 12px;
-    padding-left: 20px;
-    color: black;
-    display: inline-block;
-    font-size: 1.3em;
-    float: left;
-}
-
-.navlink a, .navlink a:link, .navlink a:visited, .navlink a:hover, .navlink a:active {
-    color: white;
-    text-decoration: none;
-    padding: 5px;
-    margin-right: 20px;
-    float: left;
-    border-radius: 4px;
-    color: white;
-    transition: color 0.4s ease;
-}
-
-.navlink a:hover {
-    transition: background-color 0.8s ease;
-    color: black;
-}*/
 
 #accountBtn {
   margin-top: -10px;
@@ -100,6 +71,19 @@ a:focus, a:hover {
 
 .nav .open>a, .nav .open>a:focus, .nav .open>a:hover {   background-color: white;
 }
+
+
+/* ------------------- */
+
+
+/* MAKER PAGE */
+.modal-container {
+  position: relative;
+}
+.modal-container .modal, .modal-container .modal-backdrop {
+  position: absolute;
+}
+
 #editbtn {
   padding: 3.5px 10px; 
 }
@@ -111,6 +95,18 @@ a:focus, a:hover {
   margin-top: 30px;
 }
 
+#sortDropDown {
+  background-color: white;
+  color: #737373;
+}
+.sortD {
+  margin-left: 30px;
+  margin-bottom: 20px;
+}
+
+
+/* YUMMLY SEARCH PAGE */
+
 #searchPanel {
   width: 500px;
   margin: 0 auto;
@@ -118,19 +114,17 @@ a:focus, a:hover {
   margin-top: 30px;
 }
 
+#copyBtn {
+  float: right;
+}
+#searchBar {
+  height: 100%;
+  width: 100%;
+}
+
 #searchResults {
   margin: 35px;
 }
-#sBtn {
-  float: right;
-}
-
-.panel {
-  margin-bottom: 0;
-  position: relative;
-  width: 280px;
-}
-
 
 .searchList {
   width: 100%;
@@ -143,24 +137,22 @@ a:focus, a:hover {
   column-count: 4;
   column-gap: 5px;
   column-fill: auto;
+  -webkit-column-width: 250px;
+  -moz-column-width: 250px;
+  column-width: 250px;
 }
 
 .grid-item {
+  width: 100%;
   display: inline-block;
-  margin: 5px 5px 5px 5px;
+  margin: 5px 5px 5x 5px;
   -webkit-column-break-inside: avoid;
   column-break-inside: avoid;
   opacity: 1;
-  padding: 5px;
+  padding: 5px 0px 5px 0px;
   -webkit-transition: all .2s ease;
   -moz-transition: all .2s ease;
   -o-transition: all .2s ease;
-}
-
-#showSearchBtn {
-  position: absolute;
-  left: 85%;
-  top:15px;
 }
 
 #dietsDropDown, #allergiesDropDown, #cuisineDropDown {
@@ -171,6 +163,17 @@ a:focus, a:hover {
 #dietHolder, #allergyHolder, #cuisineHolder {
   margin-left: 10px;
 }
+
+
+#sBtn {
+  float: right;
+}
+
+.panel {
+  margin-bottom: 0;
+  position: relative;
+}
+
 
 .textName {
   font-size: 1.6em;
@@ -185,10 +188,9 @@ a:focus, a:hover {
 
 #searchImg {
   align-content: center;
-  text-align: center;
   margin: 0 auto;
   float: none;
-  width: 80%;
+  width: 100%;
   height: auto;
   display: block;
   margin-bottom: 15px;
@@ -205,14 +207,10 @@ a:focus, a:hover {
 }
 
 
-#searchBar {
-  height: 100%;
-  width: 100%;
-}
-
 .recipe {
-  width: 280px;
+  width: 250px;
   margin: 0 auto;
+  position: relative;
 }
 
 #recipes {

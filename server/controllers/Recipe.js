@@ -76,7 +76,7 @@ const makeRecipe = (req, res) => {
   return recipePromise;
 };
 
-// for future, sort by category
+// Sort by category
 const getSorted = (request, response) => {
   const req = request;
   const res = response;
@@ -120,9 +120,12 @@ const getCategories = (request, response) => {
       console.log(err);
       return res.status(400).json({ error: 'An error occurred' });
     }
+
+    // finds index of the empty string
     const empty = docs.indexOf(' ');
-    const docs2 = docs.splice(empty, 1);
-    return res.json({ categories: docs2 });
+    // remove the empty string
+    docs.splice(empty, 1);
+    return res.json({ categories: docs });
   });
 };
 

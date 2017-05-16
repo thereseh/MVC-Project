@@ -102,11 +102,11 @@ $(document).ready(function () {
 
 var handleError = function handleError(message) {
   $("#errorMessage").text(message);
-  $("#errorMessage").animate({ width: 'toggle' }, 350);
+  $("#errorMessage").toggle('fast');
 };
 
 var redirect = function redirect(response) {
-  $("#errorMessage").animate({ width: 'hide' }, 350);
+  $("#errorMessage").hide();
   window.location = response.redirect;
 };
 

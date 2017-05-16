@@ -9,7 +9,7 @@ let Button = ReactBootstrap.Button;
 
 const handleLogin = (e) => {
   e.preventDefault();
-  $("#errorMessage").animate({width:'hide'},350);
+  $("#errorMessage").hide();
 
   if($("#user").val() == '' || $("#pass").val() == '') {
     handleError("Username or password is empty");
@@ -25,7 +25,7 @@ const handleLogin = (e) => {
 
 const handleSignup = (e) => {
   e.preventDefault();
-  $("#errorMessage").animate({width:'hide'},350);
+  $("#errorMessage").hide();
 
   if($("#user").val() == '' || $("#pass").val() == '' || $("#pass2").val() == '') {
     handleError("All fields are required");

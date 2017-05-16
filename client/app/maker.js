@@ -18,8 +18,11 @@ let Modal = ReactBootstrap.Modal;
 let SplitButton = ReactBootstrap.SplitButton;
 let MenuItem = ReactBootstrap.MenuItem;
 let DropdownButton = ReactBootstrap.DropdownButton;
+let Thumbnail = ReactBootstrap.Thumbnail;
 
-// loads recipes and categories from database
+
+// adds a recipe to the database, one callback, updates the page by
+// loading all recipes and categories.
 const handleRecipe = () => {
   sendAjax('POST', $("#modalRenderer").attr("action"), $("#modalRenderer").serialize(), function () {    
     recipeRenderer.loadRecipesFromServer();
@@ -30,26 +33,29 @@ const handleRecipe = () => {
   return false;
 };
 
+const returnKey = () => {
+  return $("#cs")[0].attributes.value.value;
+};
 
-/* Removes a recipe from the database */
+
+// Removes a recipe from the database
 const removeRecipe = (id) => {
-  // get key value, not safe
-  let key = $("#cs")[0].attributes.value.value;
+  // get key value
+  let key = returnKey();
   // data to send
   let data = `id=${id}&_csrf=${key}`;
+  // clean it up
   data = data.replace(/ /g, '+');
+  // deletes the recipe, reload recipes and categories from server
   sendAjax('DELETE', '/removeRecipe', data, function () {
     recipeRenderer.loadRecipesFromServer();
+    recipeRenderer.loadCategoriesFromServer();
   });
 
   return false;
 };
 
-
-const returnKey = () => {
-  return $("#cs")[0].attributes.value.value;
-};
-
+// parse info and return object
 const returnData = (name, ingredients, notes, category, id) => {
   let data = {
     name: name,
@@ -61,13 +67,12 @@ const returnData = (name, ingredients, notes, category, id) => {
   return data;
 };
 
-// puts together data needed to do a request for recipes
-// of a certain category
+// puts together data needed to do a request for recipes of a certain category from dropdown
 const getSorted = (category) =>  {
   if (category === "all") {
     recipeRenderer.loadRecipesFromServer();
   } else {
-    let key = $("#cs")[0].attributes.value.value;
+    let key = returnKey();
     let data = `category=${category}&_csrf=${key}`;
     recipeRenderer.sortedCategoriesFromServer(data);
     recipeRenderer.loadCategoriesFromServer();
@@ -155,10 +160,9 @@ const renderRecipe = function() {
   const recipeList = this;
   return (
     <div className="grid-item">
-     <Panel>
-        <h3 className="textName" >{this.props.name} </h3>
+     <Thumbnail src={ this.hasImage() } alt="" id="searchImg">
+       <h3 className="textName">{this.props.name} </h3>
         <Button id="showBtn"onClick={ ()=> {recipeList.toggleChildMenu()}}><Glyphicon glyph="chevron-down"/> </Button>
-        { this.hasImage() }
         <Collapse in={recipeList.state.open}>
         <div id="recipeCont">
           <h3 className="textIngr">Category:
@@ -172,6 +176,7 @@ const renderRecipe = function() {
           }
         <h3 className="textNotes" >Notes: 
           <br /></h3><p className="output">
+          {this.props.notes}<br />
           { this.hasURL() }
            </p> 
         <Modal.Footer id="listFooter">
@@ -181,12 +186,13 @@ const renderRecipe = function() {
             </Button>
         <Button onClick = {
           () => { 
+            {recipeList.toggleChildMenu()}
             removeRecipe(this.props.id)
           }}><Glyphicon glyph = "trash"/> </Button>
         </Modal.Footer>
           </div>
        </Collapse>
-       </Panel>
+      </Thumbnail>
      </div>
   )
 };
@@ -203,11 +209,13 @@ const renderRecipeList = function () {
   }
 
   const recipeList = this;
+  // get anther dropdown used for sorting recipes by category
    const cate2Nodes = this.state.cate.map(function (category, i) {
     return (
       <MenuItem key={i} eventKey={category._id} value={category} onClick={ ()=> {getSorted(category)}}>{category}</MenuItem>
     );
   });
+  // create instances of recipe child class
   const recipeNodes = this.state.data.map(function (recipe, i) {
     return (
       <div key={i} className="recipe">
@@ -224,10 +232,12 @@ const renderRecipeList = function () {
       name = "_csrf"
       value = {this.props.csrf}
     /> 
+       <div className="sortD">
        <DropdownButton bsStyle="default" title="Sort by Categories" id="sortDropDown">
         <MenuItem eventKey={0} value='all' onClick={ ()=> {getSorted('all')}}>All</MenuItem>
           {cate2Nodes}
       </DropdownButton>
+      </div>
          <div className="searchList" >
           {recipeNodes}
       </div>
@@ -236,7 +246,7 @@ const renderRecipeList = function () {
 };
 
 
-/* ====== CREATES THE MODAL ======= */
+/* ====== CREATE THE MODAL CLASS ======= */
 const createModal = function(csrf, action, method, data) {
   AddNewRecipeClass = React.createClass({
     getInitialState() {
@@ -257,8 +267,6 @@ const createModal = function(csrf, action, method, data) {
     // calls the database to retrieve categories
     loadCategoriesFromServer: function () {
       sendAjax('GET', '/getCategories', null, function (data) {
-        console.log('modal:')
-        console.dir(data);
         this.setState({
           data: data.categories,
         });
@@ -285,9 +293,11 @@ const createModal = function(csrf, action, method, data) {
      handleChangeName(e) {
         this.setState({ name: e.target.value });
      },
+    // to set notes
      handleChangeNotes(e) {
         this.setState({ notes: e.target.value });
      },
+    // to set ingredients
      handleChangeIngr(e) {
         this.setState({ ingredients: e.target.value });
      },
@@ -302,6 +312,7 @@ const createModal = function(csrf, action, method, data) {
     toggleChildMenu(value) {
       this.setState({category: value});
     },
+    // load categories to dropdown when created
     componentDidMount: function () {
       this.loadCategoriesFromServer();
     },
@@ -345,11 +356,11 @@ const Recipe = React.createClass({
         noteLines: [],
       };
     },
+  // check if certain information exist
+  // if so, either return it or render it!
   hasImage(){
     if (this.props.img != "") {
-      return (
-        <img src={this.props.img} id="searchImg"/>
-      );
+      return this.props.img;
     }
   },
   hasURL(){
@@ -360,14 +371,14 @@ const Recipe = React.createClass({
       );
     }
   },
+  // parse out ingredient list, hard to find the best way
+  // right now it helps for when copying yummly recipe
   parseText() {
     let lines = [];
-      console.dir(this.props.ingredients);
      let split = this.props.ingredients.split(/[\n,]/);
         for (let i = 0; i < split.length; i++) {
           if (split[i]) lines.push(split[i].trim());
         }
-      console.log(lines);
       this.setState({noteLines: lines});
 
   },
@@ -375,6 +386,7 @@ const Recipe = React.createClass({
    toggleChildMenu() {
       this.setState({open: !this.state.open});
     },
+  // parse text when ready
   componentDidMount: function () {
       this.parseText();
     },
@@ -398,8 +410,11 @@ const setup = function (csrf) {
    });
 
   RecipeListClass = React.createClass({
+    // load recipes from database
     loadRecipesFromServer: function () {
       sendAjax('GET', '/getRecipes', null, function (data) {
+        console.log('Recipes:');
+        console.dir(data);
         this.setState({
           data: data.recipes,
         });

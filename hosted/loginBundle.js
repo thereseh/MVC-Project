@@ -10,7 +10,7 @@ var Button = ReactBootstrap.Button;
 
 var handleLogin = function handleLogin(e) {
   e.preventDefault();
-  $("#errorMessage").animate({ width: 'hide' }, 350);
+  $("#errorMessage").hide();
 
   if ($("#user").val() == '' || $("#pass").val() == '') {
     handleError("Username or password is empty");
@@ -26,7 +26,7 @@ var handleLogin = function handleLogin(e) {
 
 var handleSignup = function handleSignup(e) {
   e.preventDefault();
-  $("#errorMessage").animate({ width: 'hide' }, 350);
+  $("#errorMessage").hide();
 
   if ($("#user").val() == '' || $("#pass").val() == '' || $("#pass2").val() == '') {
     handleError("All fields are required");
@@ -193,11 +193,11 @@ $(document).ready(function () {
 
 var handleError = function handleError(message) {
   $("#errorMessage").text(message);
-  $("#errorMessage").animate({ width: 'toggle' }, 350);
+  $("#errorMessage").toggle('fast');
 };
 
 var redirect = function redirect(response) {
-  $("#errorMessage").animate({ width: 'hide' }, 350);
+  $("#errorMessage").hide();
   window.location = response.redirect;
 };
 
