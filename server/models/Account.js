@@ -36,6 +36,7 @@ AccountSchema.statics.toAPI = doc => ({
   _id: doc._id,
 });
 
+// checks if correct password
 const validatePassword = (doc, password, callback) => {
   const pass = doc.password;
 
@@ -47,6 +48,7 @@ const validatePassword = (doc, password, callback) => {
   });
 };
 
+// find user by name
 AccountSchema.statics.findByUsername = (name, callback) => {
   const search = {
     username: name,
@@ -55,6 +57,7 @@ AccountSchema.statics.findByUsername = (name, callback) => {
   return AccountModel.findOne(search, callback);
 };
 
+// generates a hash
 AccountSchema.statics.generateHash = (password, callback) => {
   const salt = crypto.randomBytes(saltLength);
 
@@ -63,6 +66,8 @@ AccountSchema.statics.generateHash = (password, callback) => {
   );
 };
 
+// when user logs in or try to change their password
+// finds by username and do a check if the password belongs to the user
 AccountSchema.statics.authenticate = (username, password, callback) =>
 AccountModel.findByUsername(username, (err, doc) => {
   if (err) {
@@ -82,7 +87,7 @@ AccountModel.findByUsername(username, (err, doc) => {
   });
 });
 
-// finds a recipe and updates it
+// finds a user and changes the password
 AccountSchema.statics.findAndUpdate = (data, ownerId, callback) => {
   const search = {
     username: data.username,

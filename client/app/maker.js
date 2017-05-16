@@ -189,7 +189,6 @@ const renderRecipe = function() {
             {this.toggleChildMenu()}
             }
             createModal(returnKey(), '/editRecipe', 'PUT', returnData(this.props.name, this.props.ingredients, this.props.notes, this.props.category, this.props.id))
-            {this.parseText()}
           }}> Edit
             </Button>
         <Button onClick = {
